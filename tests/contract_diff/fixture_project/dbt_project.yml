@@ -1,0 +1,10 @@
+name: contract_fixture
+version: '1.0.0'
+config-version: 2
+profile: contract_fixture
+model-paths: [models]
+models:
+  contract_fixture:
+    +materialized: table
+    +contract:
+      enforced: true

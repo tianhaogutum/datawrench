@@ -1,0 +1,6 @@
+{"type":"SCHEMA","stream":"users","schema":{"type":"object"},"key_properties":["id"]}
+{"type":"SCHEMA","stream":"empty","schema":{"type":"object"},"key_properties":["id"]}
+{"type":"RECORD","stream":"users","record":{"id":1}}
+{"type":"RECORD","stream":"users","record":{"id":1}}
+{"type":"RECORD","stream":"users","record":{}}
+{"type":"STATE","value":{}}

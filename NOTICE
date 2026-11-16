@@ -1,0 +1,42 @@
+datawrench
+Copyright 2026 tianhaogutum
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Its commands were previously separate standalone projects by the same author and are
+merged here; see THIRD_PARTY.md for per-command provenance and dependency notices.
+
+- contract-diff (formerly dbt-contract-diff), sqlmesh-manifest (formerly
+  sqlmesh-dbt-manifest), tapcheck and singer-replay were released under the Apache
+  License, Version 2.0. Their NOTICE files are merged into this file below.
+- lint-cache (formerly sqlfluff-cache), dialect-audit, polars-vet, parquet-unify,
+  seedtypes and duckmate were released under the MIT License. Their original MIT
+  permission notice is reproduced in licenses/MIT-original-tools.txt.
+
+Merged from the original NOTICE files
+-------------------------------------
+
+sqlmesh-manifest (formerly sqlmesh-dbt-manifest):
+This distribution includes the unmodified dbt manifest v12 JSON schema
+(src/datawrench/sqlmesh_manifest/manifest-v12.json), from dbt Labs, Inc., under the
+Apache License, Version 2.0 (licenses/sqlmesh-manifest/dbt-schemas-LICENSE).
+See THIRD_PARTY.md for source and checksum information.
+
+contract-diff (formerly dbt-contract-diff):
+Independent software; not affiliated with or endorsed by dbt Labs or SQLGlot.
+
+tapcheck:
+Independent Singer/Airbyte offline validator. No upstream endorsement implied.
+
+singer-replay:
+An independent implementation of a cassette-backed Singer tap.
+Not affiliated with or endorsed by Meltano or Singer.
+
+Third-party software
+--------------------
+
+datawrench does not vendor third-party Python packages; optional dependencies are
+installed separately under their own licenses (see THIRD_PARTY.md and licenses/).
+The test suite keeps an unmodified copy of the OASIS SARIF 2.1.0 JSON schema
+(tests/dialect_audit/schemas/), governed by the OASIS notice in
+licenses/dialect-audit/OASIS-SARIF-NOTICE.txt; it is not part of the wheel.

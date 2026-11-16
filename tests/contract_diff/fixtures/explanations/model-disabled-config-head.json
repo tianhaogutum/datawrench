@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "project_id": "synthetic-shop",
+    "adapter_type": "duckdb"
+  },
+  "nodes": {
+    "model.shop.orders": {
+      "unique_id": "model.shop.orders",
+      "resource_type": "model",
+      "package_name": "shop",
+      "name": "orders",
+      "config": {
+        "enabled": false
+      },
+      "contract": {
+        "enforced": true
+      },
+      "columns": {
+        "id": {
+          "name": "id",
+          "data_type": "INT",
+          "constraints": []
+        }
+      },
+      "constraints": []
+    }
+  },
+  "disabled": {}
+}

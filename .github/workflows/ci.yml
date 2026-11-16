@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: macos-latest
+            python-version: "3.13"
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      # The test extra installs pytest, every optional extra except sqlmesh, flake8 (polars-vet
+      # plugin tests), pandas and the SARIF schema validators. tests/sqlmesh_manifest skips here.
+      - name: Run tests
+        run: uv run --extra test pytest -q
+      - name: Build wheel and sdist
+        if: matrix.python-version == '3.13' && matrix.os == 'ubuntu-latest'
+        run: uv build
+
+  sqlmesh:
+    # sqlmesh 0.236.x pins sqlglot~=30.8.0 and pulls a large dependency tree, so
+    # `datawrench sqlmesh-manifest` is tested in its own environment. Python 3.11-3.12 is the
+    # range the standalone tool was released for.
+    name: sqlmesh-manifest, Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Run sqlmesh-manifest tests
+        run: uv run --extra test --extra sqlmesh pytest -q tests/sqlmesh_manifest tests/test_datawrench_cli.py

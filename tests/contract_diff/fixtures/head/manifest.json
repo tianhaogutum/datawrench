@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.11.1",
+    "project_name": "shop",
+    "project_id": "synthetic-shop",
+    "adapter_type": "duckdb"
+  },
+  "nodes": {
+    "model.shop.orders": {
+      "unique_id": "model.shop.orders",
+      "resource_type": "model",
+      "package_name": "shop",
+      "name": "orders",
+      "config": {
+        "enabled": true
+      },
+      "contract": {
+        "enforced": true
+      },
+      "columns": {
+        "id": {
+          "name": "id",
+          "data_type": "BIGINT",
+          "constraints": []
+        },
+        "payload": {
+          "name": "payload",
+          "data_type": "STRUCT(id INTEGER, amount VARCHAR)",
+          "constraints": []
+        },
+        "amount": {
+          "name": "amount",
+          "data_type": "DECIMAL(8,2)",
+          "constraints": []
+        },
+        "label": {
+          "name": "label",
+          "data_type": "VARCHAR(20)",
+          "constraints": []
+        },
+        "score": {
+          "name": "score",
+          "data_type": "DOUBLE",
+          "constraints": []
+        },
+        "tags": {
+          "name": "tags",
+          "data_type": "ARRAY(STRUCT(code VARCHAR))",
+          "constraints": []
+        },
+        "lookup": {
+          "name": "lookup",
+          "data_type": "MAP(VARCHAR, BIGINT)",
+          "constraints": []
+        },
+        "new_name": {
+          "name": "new_name",
+          "data_type": "DATE",
+          "constraints": []
+        }
+      },
+      "constraints": [
+        {
+          "type": "unique",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    }
+  },
+  "disabled": {}
+}

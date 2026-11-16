@@ -1,0 +1,1 @@
+SELECT APPROX_DISTINCT(id, 0.1) FROM orders;

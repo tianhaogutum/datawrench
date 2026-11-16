@@ -1,0 +1,161 @@
+[build-system]
+requires = ["hatchling>=1.27", "hatch-fancy-pypi-readme>=24.1"]
+build-backend = "hatchling.build"
+
+[project]
+name = "datawrench"
+version = "0.1.0"
+description = "Catch breaking dbt contract changes, SQL dialect traps, CSV type drift, Parquet schema mismatches and broken Singer taps before they hit the warehouse — one offline CLI."
+# README.md with repository-relative links rewritten for PyPI (see tool.hatch.metadata.hooks below).
+dynamic = ["readme"]
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY.md"]
+authors = [{ name = "tianhaogutum" }]
+keywords = [
+    "dbt", "dbt-contracts", "sqlmesh", "sql", "sqlglot", "sql-dialects", "sqlfluff", "linting",
+    "duckdb", "polars", "parquet", "pyarrow", "csv", "seeds", "schema-drift", "migrations",
+    "dbmate", "singer", "airbyte", "meltano", "data-quality", "data-engineering", "sarif",
+    "devtools", "cli",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: SQL",
+    "Topic :: Database",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Utilities",
+]
+# The base install is the standard library plus PyYAML (dialect-audit and seedtypes read YAML
+# fixtures and properties); heavier dependencies are per-command extras.
+dependencies = ["PyYAML>=6.0.2"]
+
+[project.optional-dependencies]
+# contract-diff, dialect-audit, seedtypes. One range for every command: contract-diff and
+# dialect-audit use the sqlglot 30 AST API (exp.DType / exp.Expr), and sqlmesh 0.236.x
+# requires sqlglot~=30.8.0, so >=30.8 keeps `datawrench[all,sqlmesh]` resolvable.
+# sqlglot majors rename AST classes, so stay below 31.
+sqlglot = ["sqlglot>=30.8,<31"]
+# duckmate, dialect-audit, parquet-unify, seedtypes. fsspec: DuckDB's Python client needs it
+# to read the in-memory file-like CSV batches seedtypes hands it.
+duckdb = ["duckdb>=1.4.2,<2", "fsspec>=2025.10.0"]
+# parquet-unify (verify), seedtypes (compare and generated recipes)
+polars = ["polars>=1.35.2,<2"]
+# parquet-unify: footers, Arrow types and row-group rewrites
+parquet = ["pyarrow>=21,<24"]
+# lint-cache drives SQLFluff internals (FluffConfig, Linter, templaters): stay within 4.5.x.
+sqlfluff = ["sqlfluff>=4.5,<4.6", "jinja2>=3.1.6"]
+# tapcheck: JSON Schema validation and the `date-time` format checker
+singer = ["jsonschema>=4.23", "rfc3339-validator>=0.1.4"]
+# sqlmesh-manifest: uses SQLMesh internals (Context, loaders, analytics) that change between
+# minors, so it is pinned to the tested 0.236 series; that pins sqlglot to ~=30.8.0.
+# Kept out of `all`; CI runs its tests in a separate job.
+sqlmesh = [
+    "sqlmesh>=0.236.4,<0.237",
+    "dbt-artifacts-parser>=0.15,<0.16",
+    "jsonschema>=4.23",
+    "ruamel.yaml>=0.18.6",
+    "pydantic>=2.12,<3",
+]
+# polars-vet as a flake8 plugin (the `PLV` entry point below); not needed for the CLI.
+flake8 = ["flake8>=7.3,<8"]
+all = ["datawrench[sqlglot,duckdb,polars,parquet,sqlfluff,singer]"]
+# Everything the default test suite imports: pytest, every extra except sqlmesh, flake8 for the
+# polars-vet plugin tests, pandas for the PLV007 benchmark replay and rfc3986-validator for the
+# dialect-audit SARIF `uri` format checks. The sqlmesh-manifest tests skip without sqlmesh;
+# run them with `uv run --extra test --extra sqlmesh pytest tests/sqlmesh_manifest`.
+test = [
+    "datawrench[all,flake8]",
+    "pytest>=8.4",
+    "pandas>=2.3",
+    "rfc3986-validator>=0.1.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/tianhaogutum/datawrench"
+Repository = "https://github.com/tianhaogutum/datawrench"
+Issues = "https://github.com/tianhaogutum/datawrench/issues"
+Documentation = "https://github.com/tianhaogutum/datawrench/tree/main/docs"
+
+[project.scripts]
+datawrench = "datawrench.cli:main"
+
+[project.entry-points."flake8.extension"]
+# `datawrench polars-vet` rules, also available as a flake8 plugin (select PLV).
+PLV = "datawrench.polars_vet.plugin:PolarsVetChecker"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+# <img src>, <source srcset>: raw file URLs so the images render
+pattern = '(src|srcset)="(?!https?://)([^"]+)"'
+replacement = '\1="https://raw.githubusercontent.com/tianhaogutum/datawrench/main/\2"'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = 'href="(?!https?://|#|mailto:)([^"]+)"'
+replacement = 'href="https://github.com/tianhaogutum/datawrench/blob/main/\1"'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+# Markdown images, then Markdown links to files and directories
+pattern = '!\[([^\]]*)\]\((?!https?://)([^)\s]+)\)'
+replacement = '![\1](https://raw.githubusercontent.com/tianhaogutum/datawrench/main/\2)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\((?!https?://|#|mailto:)([^)\s]+)\)'
+replacement = '](https://github.com/tianhaogutum/datawrench/blob/main/\1)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+# In-page anchors: PyPI does not generate heading ids
+pattern = '\]\(#([^)\s]+)\)'
+replacement = '](https://github.com/tianhaogutum/datawrench#\1)'
+
+[tool.hatch.build.targets.wheel]
+# Hatch ships every non-ignored file under src/datawrench/, including the package data
+# sqlmesh_manifest/*.json (the vendored dbt manifest v12 schema and the diff / validation-result
+# schemas that `datawrench sqlmesh-manifest` validates against).
+packages = ["src/datawrench"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/docs",
+    "/examples",
+    "/licenses",
+    "/README.md",
+    "/LICENSE",
+    "/NOTICE",
+    "/THIRD_PARTY.md",
+    "/pyproject.toml",
+]
+exclude = ["__pycache__", "*.pyc", ".cache"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+# Correctness-focused set; the merged tools keep their original compact style.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test modules re-export fixtures and helpers across sibling modules and keep a compact style.
+"tests/**" = ["F401", "F811", "F841", "E402", "E701", "E702", "E731"]
+"examples/**" = ["E402", "E701", "E702", "E731"]

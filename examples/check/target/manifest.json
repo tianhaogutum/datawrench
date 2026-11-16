@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.10.0",
+    "generated_at": "2026-11-16T09:00:00Z",
+    "adapter_type": "duckdb",
+    "project_name": "shop"
+  },
+  "nodes": {
+    "model.shop.stg_orders": {
+      "resource_type": "model",
+      "unique_id": "model.shop.stg_orders",
+      "name": "stg_orders",
+      "package_name": "shop",
+      "config": {"enabled": true, "materialized": "view", "contract": {"enforced": false}},
+      "contract": {"enforced": false},
+      "columns": {},
+      "constraints": []
+    },
+    "model.shop.orders": {
+      "resource_type": "model",
+      "unique_id": "model.shop.orders",
+      "name": "orders",
+      "package_name": "shop",
+      "config": {"enabled": true, "materialized": "table", "contract": {"enforced": true}},
+      "contract": {"enforced": true},
+      "columns": {
+        "order_id": {"name": "order_id", "data_type": "integer", "constraints": []},
+        "customer_id": {"name": "customer_id", "data_type": "integer", "constraints": []},
+        "amount": {"name": "amount", "data_type": "decimal(12,2)", "constraints": []},
+        "ordered_at": {"name": "ordered_at", "data_type": "timestamp", "constraints": []}
+      },
+      "constraints": []
+    },
+    "seed.shop.zip_codes": {
+      "resource_type": "seed",
+      "unique_id": "seed.shop.zip_codes",
+      "name": "zip_codes",
+      "package_name": "shop",
+      "config": {"enabled": true}
+    }
+  },
+  "disabled": {}
+}

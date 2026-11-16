@@ -1,0 +1,35 @@
+{
+  "metadata": {"dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v1.json"},
+  "nodes": {
+    "analysis.legacy.overview": {
+      "unique_id": "analysis.legacy.overview",
+      "resource_type": "analysis",
+      "package_name": "legacy",
+      "root_path": ".",
+      "path": "overview.sql",
+      "original_file_path": "analyses/overview.sql",
+      "name": "overview",
+      "alias": "overview",
+      "schema": "analytics",
+      "fqn": ["legacy", "overview"],
+      "raw_sql": "select 1 as id",
+      "checksum": {"name": "sha256", "checksum": "synthetic"}
+    }
+  },
+  "sources": {},
+  "macros": {
+    "macro.legacy.example": {
+      "unique_id": "macro.legacy.example",
+      "resource_type": "macro",
+      "package_name": "legacy",
+      "root_path": ".",
+      "path": "example.sql",
+      "original_file_path": "macros/example.sql",
+      "name": "example",
+      "macro_sql": "{% macro example() %}1{% endmacro %}"
+    }
+  },
+  "docs": {},
+  "exposures": {},
+  "selectors": {}
+}

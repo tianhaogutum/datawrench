@@ -1,0 +1,6 @@
+- name: raw.input
+  columns:
+    id: BIGINT
+    label: TEXT
+  column_descriptions:
+    id: Upstream business identifier

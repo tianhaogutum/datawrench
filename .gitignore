@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Environments and tool caches
+.venv/
+.venv*/
+venv/
+.tmp/
+.cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Lock files are not committed for this library; CI resolves fresh dependencies.
+uv.lock
+
+# Local tool outputs (ledgers, Parquet exports, SARIF reports)
+*.sqlite
+*.sqlite-*
+*.parquet
+*.parquet.manifest.json
+*.sarif
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Tool outputs and caches written by datawrench commands and their tests
+*.duckdb
+*.duckdb.wal
+*.duckmate.lock
+.sqlfluff_cache/
+.dialect-audit-*
+.tapcheck-bench-*/
+tests/contract_diff/.fixture-build/
+tests/contract_diff/fixture_project/target/
+tests/contract_diff/fixture_project/logs/
+
+# singer-replay example and optional real-loader test environment
+.demo-salt
+target-config.json
+target-output/
+.venv-target/
+examples/singer_replay/.meltano/
+examples/singer_replay/output/

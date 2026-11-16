@@ -1,0 +1,3 @@
+{"type":"CATALOG","catalog":{"streams":[{"stream":{"name":"users","namespace":"public","json_schema":{"type":"object","properties":{"id":{"type":"integer"},"updated":{"type":"integer"},"name":{"type":["string","null"]}}},"supported_sync_modes":["incremental"]},"primary_key":[["id"]],"cursor_field":["updated"]}]}}
+{"type":"RECORD","record":{"stream":"users","namespace":"public","data":{"id":1,"updated":1,"name":null},"emitted_at":1767225601000}}
+{"type":"STATE","state":{"type":"STREAM","stream":{"stream_state":{}}}}

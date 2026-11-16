@@ -1,0 +1,4 @@
+{"type":"SCHEMA","stream":"orders","schema":{"type":"object","properties":{"id":{"type":"integer"},"amount":{"type":"number"},"updated_at":{"type":"string","format":"date-time"}}},"key_properties":["id"],"bookmark_properties":["updated_at"]}
+{"type":"RECORD","stream":"orders","record":{"id":1,"amount":19.5,"updated_at":"2026-11-01T09:00:00Z"}}
+{"type":"RECORD","stream":"orders","record":{"amount":7.25,"updated_at":"2026-11-01T09:05:00Z"}}
+{"type":"RECORD","stream":"orders","record":{"id":3,"amount":"12.00","updated_at":"2026-11-01T09:10:00Z"}}

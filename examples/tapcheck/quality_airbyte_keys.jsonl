@@ -1,0 +1,6 @@
+{"type":"CATALOG","catalog":{"streams":[{"name":"users","json_schema":{"type":"object"},"source_defined_primary_key":[["obj","id"],["other"]]}]}}
+{"type":"RECORD","record":{"stream":"users","data":{"obj":{"id":1},"other":2},"emitted_at":0}}
+{"type":"RECORD","record":{"stream":"users","data":{"obj":{},"other":null},"emitted_at":0}}
+{"type":"RECORD","record":{"stream":"users","data":{"obj":null,"other":3},"emitted_at":0}}
+{"type":"RECORD","record":{"stream":"users","data":{"obj":{"id":null}},"emitted_at":0}}
+{"type":"STATE","state":{"data":{}}}

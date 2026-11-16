@@ -1,0 +1,48 @@
+version: 1
+default_environment: dev
+send_anonymous_usage_stats: false
+project_id: 04600000-0000-4000-8000-000000000046
+environments:
+  - name: dev
+plugins:
+  extractors:
+    - name: tap-replay
+      namespace: singer_replay
+      # The tap is `datawrench singer-replay tap` (formerly the `tap-replay` executable).
+      # Install datawrench yourself so `datawrench` is on PATH (no extra is needed for
+      # singer-replay); Meltano does not install it. The ./tap-replay wrapper in this
+      # directory runs `datawrench singer-replay tap "$@"`, because Meltano passes the
+      # Singer arguments to a single executable.
+      executable: ./tap-replay
+      capabilities: [catalog, discover, state, about]
+      settings:
+        - name: cassette_path
+          kind: string
+        - name: time_shift
+          kind: string
+        - name: fail_after_records
+          kind: integer
+        - name: fail_exit_code
+          kind: integer
+        - name: state_message_frequency
+          kind: integer
+        - name: delay_ms
+          kind: integer
+      config:
+        cassette_path: /tmp/singer-replay-cassette
+      select:
+        - customers.*
+        - products.*
+  loaders:
+    - name: target-jsonl
+      namespace: target_jsonl
+      pip_url: target-jsonl==0.1.4
+      executable: target-jsonl
+      settings:
+        - name: destination_path
+          kind: string
+        - name: do_timestamp_file
+          kind: boolean
+      config:
+        destination_path: output
+        do_timestamp_file: false

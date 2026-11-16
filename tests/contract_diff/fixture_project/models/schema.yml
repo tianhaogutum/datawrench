@@ -1,0 +1,10 @@
+version: 2
+models:
+  - name: orders
+    columns:
+      - name: id
+        data_type: INTEGER
+        constraints:
+          - type: not_null
+      - name: payload
+        data_type: 'STRUCT(id INTEGER, amount DECIMAL(10,2))'

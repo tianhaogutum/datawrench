@@ -1,0 +1,119 @@
+{
+  "baseline_version": 1,
+  "configuration": {
+    "auto_stub": false,
+    "binding": "duckdb-explain",
+    "read": "snowflake",
+    "schema": {
+      "file": "examples/dialect_audit/schema.sql",
+      "sha256": "a551f13cf35ebc1c4981b3404cf4c56dfdd7779ff74f3147a9f8cb4fbfbf1d3e"
+    },
+    "schema_read": "snowflake",
+    "write": "duckdb"
+  },
+  "files": [
+    "examples/dialect_audit/snowflake/report.sql"
+  ],
+  "notices": [],
+  "statements": [
+    {
+      "auto_stubs": [],
+      "binding_status": "bound",
+      "column_end": 29,
+      "column_start": 1,
+      "diagnostics": [],
+      "file": "examples/dialect_audit/snowflake/report.sql",
+      "functions": {},
+      "index": 1,
+      "line_end": 2,
+      "line_start": 2,
+      "source_sql": "SELECT id, amount FROM orders",
+      "target_sql": "SELECT id, amount FROM orders"
+    },
+    {
+      "auto_stubs": [],
+      "binding_status": "bound",
+      "column_end": 73,
+      "column_start": 1,
+      "diagnostics": [],
+      "file": "examples/dialect_audit/snowflake/report.sql",
+      "functions": {
+        "sum": 1
+      },
+      "index": 2,
+      "line_end": 4,
+      "line_start": 4,
+      "source_sql": "SELECT customer_id, SUM(amount) AS total FROM orders GROUP BY customer_id",
+      "target_sql": "SELECT customer_id, SUM(amount) AS total FROM orders GROUP BY customer_id"
+    },
+    {
+      "auto_stubs": [],
+      "binding_status": "bound",
+      "column_end": 59,
+      "column_start": 1,
+      "diagnostics": [],
+      "file": "examples/dialect_audit/snowflake/report.sql",
+      "functions": {
+        "timestamp_trunc": 1
+      },
+      "index": 3,
+      "line_end": 6,
+      "line_start": 6,
+      "source_sql": "SELECT DATE_TRUNC('month', created_at) AS month FROM orders",
+      "target_sql": "SELECT DATE_TRUNC('MONTH', created_at) AS month FROM orders"
+    },
+    {
+      "auto_stubs": [],
+      "binding_status": "failed",
+      "column_end": 42,
+      "column_start": 1,
+      "diagnostics": [
+        {
+          "category": "ANONYMOUS_FUNCTION",
+          "message": "my_udf: unknown to SQLGlot; passed through without a verified translation",
+          "severity": "warn"
+        },
+        {
+          "category": "BIND_ERROR",
+          "message": "Catalog Error: Scalar Function with name my_udf does not exist!\nDid you mean \"mad\"?\n\nLINE 1: EXPLAIN SELECT MY_UDF(amount) AS score FROM orders\n                       ^",
+          "severity": "error"
+        }
+      ],
+      "file": "examples/dialect_audit/snowflake/report.sql",
+      "functions": {
+        "my_udf": 1
+      },
+      "index": 4,
+      "line_end": 8,
+      "line_start": 8,
+      "source_sql": "SELECT MY_UDF(amount) AS score FROM orders",
+      "target_sql": "SELECT MY_UDF(amount) AS score FROM orders"
+    },
+    {
+      "auto_stubs": [],
+      "binding_status": "failed",
+      "column_end": 33,
+      "column_start": 1,
+      "diagnostics": [
+        {
+          "category": "BIND_ERROR",
+          "message": "Binder Error: Referenced column \"missing_column\" not found in FROM clause!\nCandidate bindings: \"id\"\n\nLINE 1: EXPLAIN SELECT missing_column FROM orders\n                       ^",
+          "severity": "error"
+        }
+      ],
+      "file": "examples/dialect_audit/snowflake/report.sql",
+      "functions": {},
+      "index": 5,
+      "line_end": 10,
+      "line_start": 10,
+      "source_sql": "SELECT missing_column FROM orders",
+      "target_sql": "SELECT missing_column FROM orders"
+    }
+  ],
+  "tool_versions": {
+    "PyYAML": "6.0.3",
+    "dialect-audit": "0.1.0",
+    "duckdb": "1.4.1",
+    "sqlglot": "28.0.0"
+  }
+}

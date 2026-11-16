@@ -1,0 +1,10 @@
+[
+  {"file": "ok.sql", "read": "snowflake", "categories": ["OK"]},
+  {"file": "parse.sql", "read": "snowflake", "categories": ["PARSE_ERROR"]},
+  {"file": "command.sql", "read": "snowflake", "categories": ["COMMAND_FALLBACK"]},
+  {"file": "anonymous.sql", "read": "snowflake", "categories": ["ANONYMOUS_FUNCTION", "BIND_ERROR"]},
+  {"file": "roundtrip.sql", "read": "snowflake", "categories": ["ROUNDTRIP_UNSTABLE"]},
+  {"file": "bind.sql", "read": "snowflake", "categories": ["BIND_ERROR"]},
+  {"file": "unknown.sql", "read": "snowflake", "categories": ["UNKNOWN_TABLE", "BIND_ERROR"]},
+  {"file": "unsupported.sql", "read": "presto", "categories": ["UNSUPPORTED"]}
+]

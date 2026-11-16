@@ -1,0 +1,6 @@
+- name: raw.legacy
+  columns:
+    id: INT
+    label: TEXT
+  column_descriptions:
+    id: Unconsumed upstream identifier

@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "adapter_type": "duckdb",
+    "project_id": "shop"
+  },
+  "nodes": {
+    "model.shop.orders": {
+      "resource_type": "model",
+      "unique_id": "model.shop.orders",
+      "package_name": "shop",
+      "name": "orders",
+      "version": 2,
+      "contract": {
+        "enforced": true
+      },
+      "config": {
+        "enabled": true
+      },
+      "columns": {
+        "id": {
+          "data_type": "INT",
+          "constraints": []
+        }
+      },
+      "constraints": []
+    }
+  }
+}

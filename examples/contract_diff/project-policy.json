@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "model": "model.shop.orders",
+      "column": "payload",
+      "path_segments": [
+        {"kind": "field", "name": "items"},
+        {"kind": "array_element"},
+        {"kind": "field", "name": "amount"}
+      ],
+      "rule": "decimal_capacity",
+      "severity": "non_breaking"
+    }
+  ]
+}

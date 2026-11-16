@@ -1,0 +1,537 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Offline semantic manifest diff v1",
+  "description": "Current diff-v1 producer contract. Additive fields, summary counters and unknown event kinds are allowed; known shapes and explicit null provenance remain required. Structural validation only; see README for limits.",
+  "type": "object",
+  "properties": {
+    "diff_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "has_changes": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "model_added": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model_removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dependencies_changed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column_added": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column_removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column_changed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_added": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "description_changed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "model_added",
+        "model_removed",
+        "dependencies_changed",
+        "column_added",
+        "column_removed",
+        "column_changed",
+        "source_added",
+        "source_removed"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/change"
+      }
+    }
+  },
+  "required": [
+    "diff_version",
+    "has_changes",
+    "summary",
+    "changes"
+  ],
+  "if": {
+    "properties": {
+      "has_changes": {
+        "const": false
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "changes": {
+        "maxItems": 0
+      },
+      "summary": {
+        "properties": {
+          "model_added": {
+            "const": 0
+          },
+          "model_removed": {
+            "const": 0
+          },
+          "dependencies_changed": {
+            "const": 0
+          },
+          "column_added": {
+            "const": 0
+          },
+          "column_removed": {
+            "const": 0
+          },
+          "column_changed": {
+            "const": 0
+          },
+          "source_added": {
+            "const": 0
+          },
+          "source_removed": {
+            "const": 0
+          },
+          "description_changed": {
+            "const": 0
+          }
+        },
+        "additionalProperties": {
+          "const": 0
+        }
+      }
+    }
+  },
+  "else": {
+    "properties": {
+      "changes": {
+        "minItems": 1
+      }
+    }
+  },
+  "definitions": {
+    "change": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "node_id": {
+          "type": "string"
+        },
+        "before_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "after_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "node_id",
+        "before_file",
+        "after_file"
+      ],
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "model_added",
+                "source_added"
+              ]
+            },
+            "before_file": {
+              "type": "null"
+            },
+            "column": false,
+            "before": false,
+            "after": false,
+            "added": false,
+            "removed": false
+          },
+          "required": [
+            "before_file"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "model_removed",
+                "source_removed"
+              ]
+            },
+            "after_file": {
+              "type": "null"
+            },
+            "column": false,
+            "before": false,
+            "after": false,
+            "added": false,
+            "removed": false
+          },
+          "required": [
+            "after_file"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "dependencies_changed"
+              ]
+            },
+            "added": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/dependency"
+              }
+            },
+            "removed": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/dependency"
+              }
+            },
+            "column": false,
+            "before": false,
+            "after": false
+          },
+          "required": [
+            "added",
+            "removed"
+          ],
+          "anyOf": [
+            {
+              "properties": {
+                "added": {
+                  "minItems": 1
+                }
+              }
+            },
+            {
+              "properties": {
+                "removed": {
+                  "minItems": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "column_added"
+              ]
+            },
+            "column": {
+              "type": "string"
+            },
+            "before": {
+              "type": "null"
+            },
+            "after": {
+              "$ref": "#/definitions/column"
+            },
+            "added": false,
+            "removed": false
+          },
+          "required": [
+            "column",
+            "before",
+            "after"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "column_removed"
+              ]
+            },
+            "column": {
+              "type": "string"
+            },
+            "before": {
+              "$ref": "#/definitions/column"
+            },
+            "after": {
+              "type": "null"
+            },
+            "added": false,
+            "removed": false
+          },
+          "required": [
+            "column",
+            "before",
+            "after"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "column_changed"
+              ]
+            },
+            "column": {
+              "type": "string"
+            },
+            "before": {
+              "$ref": "#/definitions/column"
+            },
+            "after": {
+              "$ref": "#/definitions/column"
+            },
+            "added": false,
+            "removed": false
+          },
+          "required": [
+            "column",
+            "before",
+            "after"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "description_changed"
+              ]
+            },
+            "before": {
+              "type": "string"
+            },
+            "after": {
+              "type": "string"
+            },
+            "column": false,
+            "added": false,
+            "removed": false
+          },
+          "required": [
+            "before",
+            "after"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "not": {
+                "enum": [
+                  "model_added",
+                  "model_removed",
+                  "dependencies_changed",
+                  "column_added",
+                  "column_removed",
+                  "column_changed",
+                  "source_added",
+                  "source_removed",
+                  "description_changed"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "dependency": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "node_id",
+        "file"
+      ]
+    },
+    "column": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "meta": {
+          "type": "object"
+        },
+        "data_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/constraint"
+          }
+        },
+        "quote": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "_extra": {
+          "type": "object"
+        },
+        "granularity": {
+          "enum": [
+            null,
+            "nanosecond",
+            "microsecond",
+            "millisecond",
+            "second",
+            "minute",
+            "hour",
+            "day",
+            "week",
+            "month",
+            "quarter",
+            "year"
+          ]
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "meta": {
+              "type": "object"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "_extra": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "meta",
+            "tags",
+            "_extra"
+          ]
+        },
+        "doc_blocks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "meta",
+        "data_type",
+        "constraints",
+        "quote",
+        "tags",
+        "_extra",
+        "granularity",
+        "config"
+      ]
+    },
+    "constraint": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "check",
+            "not_null",
+            "unique",
+            "primary_key",
+            "foreign_key",
+            "custom"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expression": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "warn_unenforced": {
+          "type": "boolean"
+        },
+        "warn_unsupported": {
+          "type": "boolean"
+        },
+        "to": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to_columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+SELECT MY_UDF(1);

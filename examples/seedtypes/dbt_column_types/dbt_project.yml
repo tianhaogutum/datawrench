@@ -1,0 +1,9 @@
+name: example
+seeds:
+  +column_types:
+    zip: BIGINT
+    amount: DECIMAL(3,2)
+    note: VARCHAR
+  example:
+    nested:
+      +delimiter: "\t"

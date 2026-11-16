@@ -1,0 +1,5 @@
+#!/bin/sh
+# Meltano invokes an extractor as a single executable plus Singer arguments
+# (--config/--discover/--catalog/--state/--about). This wrapper maps that former
+# `tap-replay` executable onto `datawrench singer-replay tap`.
+exec datawrench singer-replay tap "$@"

@@ -1,0 +1,33 @@
+{
+  "streams": [
+    {
+      "tap_stream_id": "customers",
+      "metadata": [
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "selected": true
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "profile"
+          ],
+          "metadata": {
+            "selected": false
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "tags"
+          ],
+          "metadata": {
+            "selected": false
+          }
+        }
+      ]
+    }
+  ]
+}

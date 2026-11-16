@@ -1,0 +1,174 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.12.6",
+    "generated_at": "2026-11-11T00:00:00Z",
+    "invocation_id": "00000000-0000-0000-0000-000000000000",
+    "invocation_started_at": "2026-11-11T00:00:00Z",
+    "env": {},
+    "project_name": "contract_fixture",
+    "project_id": "036cdc567572a6c6f324fc51c61059a5",
+    "user_id": null,
+    "send_anonymous_usage_stats": false,
+    "adapter_type": "duckdb",
+    "quoting": {
+      "database": true,
+      "schema": true,
+      "identifier": true,
+      "column": null
+    },
+    "run_started_at": "2026-11-11T00:00:00Z"
+  },
+  "nodes": {
+    "model.contract_fixture.orders": {
+      "database": "memory",
+      "schema": "main",
+      "name": "orders",
+      "resource_type": "model",
+      "package_name": "contract_fixture",
+      "path": "orders.sql",
+      "original_file_path": "models/orders.sql",
+      "unique_id": "model.contract_fixture.orders",
+      "fqn": [
+        "contract_fixture",
+        "orders"
+      ],
+      "alias": "orders",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "9be5ecd3c7df1880406eed999fddfba8855820036def4fea69c88b0a2a1fe13f"
+      },
+      "config": {
+        "enabled": true,
+        "alias": null,
+        "schema": null,
+        "database": null,
+        "tags": [],
+        "meta": {},
+        "group": null,
+        "static_analysis": null,
+        "materialized": "table",
+        "incremental_strategy": null,
+        "batch_size": null,
+        "lookback": 1,
+        "begin": null,
+        "persist_docs": {},
+        "post-hook": [],
+        "pre-hook": [],
+        "quoting": {},
+        "column_types": {},
+        "full_refresh": null,
+        "unique_key": null,
+        "on_schema_change": "ignore",
+        "on_configuration_change": "apply",
+        "grants": {},
+        "packages": [],
+        "docs": {
+          "show": true,
+          "node_color": null
+        },
+        "contract": {
+          "enforced": true,
+          "alias_types": true
+        },
+        "event_time": null,
+        "concurrent_batches": null,
+        "access": "protected",
+        "freshness": null,
+        "on_error": null,
+        "latest_version_pointer": {
+          "enabled": null,
+          "alias": null
+        }
+      },
+      "tags": [],
+      "description": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "description": "",
+          "meta": {},
+          "data_type": "INTEGER",
+          "constraints": [
+            {
+              "type": "not_null",
+              "name": null,
+              "expression": null,
+              "warn_unenforced": true,
+              "warn_unsupported": true,
+              "to": null,
+              "to_columns": []
+            }
+          ],
+          "quote": null,
+          "config": {
+            "meta": {},
+            "tags": []
+          },
+          "tags": [],
+          "granularity": null,
+          "dimension": null,
+          "entity": null,
+          "doc_blocks": []
+        },
+        "payload": {
+          "name": "payload",
+          "description": "",
+          "meta": {},
+          "data_type": "STRUCT(id INTEGER, amount VARCHAR)",
+          "constraints": [],
+          "quote": null,
+          "config": {
+            "meta": {},
+            "tags": []
+          },
+          "tags": [],
+          "granularity": null,
+          "dimension": null,
+          "entity": null,
+          "doc_blocks": []
+        }
+      },
+      "meta": {},
+      "group": null,
+      "docs": {
+        "show": true,
+        "node_color": null
+      },
+      "patch_path": "contract_fixture://models/schema.yml",
+      "build_path": null,
+      "unrendered_config": {
+        "materialized": "table",
+        "contract": {
+          "enforced": true
+        }
+      },
+      "relation_name": "\"memory\".\"main\".\"orders\"",
+      "raw_code": "select\n    1::integer as id,\n    {'id': 1, 'amount': 12.34::decimal(10,2)} as payload",
+      "doc_blocks": [],
+      "language": "sql",
+      "refs": [],
+      "sources": [],
+      "metrics": [],
+      "functions": [],
+      "depends_on": {
+        "macros": [],
+        "nodes": []
+      },
+      "compiled_path": null,
+      "contract": {
+        "enforced": true,
+        "alias_types": true,
+        "checksum": "a13387b5aa235f86a7df5b337cd4cad6490f3ffc7e5e08628060cd4ff30e88ea"
+      },
+      "access": "protected",
+      "constraints": [],
+      "version": null,
+      "latest_version": null,
+      "deprecation_date": null,
+      "primary_key": [],
+      "time_spine": null
+    }
+  },
+  "disabled": {}
+}

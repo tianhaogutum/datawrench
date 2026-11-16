@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.11.1",
+    "project_name": "shop",
+    "project_id": "synthetic-shop",
+    "adapter_type": "duckdb"
+  },
+  "nodes": {
+    "model.shop.orders": {
+      "unique_id": "model.shop.orders",
+      "resource_type": "model",
+      "package_name": "shop",
+      "name": "orders",
+      "config": {
+        "enabled": true
+      },
+      "contract": {
+        "enforced": true
+      },
+      "columns": {
+        "id": {
+          "name": "id",
+          "data_type": "INTEGER",
+          "constraints": [
+            {
+              "type": "not_null"
+            }
+          ]
+        },
+        "payload": {
+          "name": "payload",
+          "data_type": "STRUCT(id INTEGER, amount DECIMAL(10,2))",
+          "constraints": []
+        },
+        "amount": {
+          "name": "amount",
+          "data_type": "DECIMAL(10,2)",
+          "constraints": []
+        },
+        "label": {
+          "name": "label",
+          "data_type": "VARCHAR(10)",
+          "constraints": []
+        },
+        "score": {
+          "name": "score",
+          "data_type": "FLOAT",
+          "constraints": []
+        },
+        "tags": {
+          "name": "tags",
+          "data_type": "ARRAY(STRUCT(code INTEGER))",
+          "constraints": []
+        },
+        "lookup": {
+          "name": "lookup",
+          "data_type": "MAP(VARCHAR, INTEGER)",
+          "constraints": []
+        },
+        "old_name": {
+          "name": "old_name",
+          "data_type": "DATE",
+          "constraints": []
+        }
+      },
+      "constraints": []
+    }
+  },
+  "disabled": {}
+}

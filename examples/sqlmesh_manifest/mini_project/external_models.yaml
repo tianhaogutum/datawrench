@@ -1,0 +1,7 @@
+- name: raw.customers
+  columns:
+    customer_id: INT
+    name: TEXT
+  column_descriptions:
+    customer_id: Synthetic customer identifier
+  description: Synthetic upstream customer table (never queried)

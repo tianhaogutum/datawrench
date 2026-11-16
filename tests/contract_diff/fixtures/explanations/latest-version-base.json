@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "adapter_type": "duckdb"
+  },
+  "nodes": {
+    "model.shop.orders.v1": {
+      "resource_type": "model",
+      "unique_id": "model.shop.orders.v1",
+      "name": "orders",
+      "package_name": "shop",
+      "version": 1,
+      "latest_version": 1,
+      "contract": {
+        "enforced": true
+      },
+      "columns": {
+        "id": {
+          "data_type": "INT"
+        }
+      }
+    },
+    "model.shop.orders.v2": {
+      "resource_type": "model",
+      "unique_id": "model.shop.orders.v2",
+      "name": "orders",
+      "package_name": "shop",
+      "version": 2,
+      "latest_version": 1,
+      "contract": {
+        "enforced": true
+      },
+      "columns": {
+        "id": {
+          "data_type": "INT"
+        }
+      }
+    }
+  }
+}

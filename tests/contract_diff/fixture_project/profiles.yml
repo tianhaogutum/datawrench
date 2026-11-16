@@ -1,0 +1,7 @@
+contract_fixture:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: ':memory:'
+      threads: 1

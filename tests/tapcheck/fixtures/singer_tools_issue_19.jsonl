@@ -1,0 +1,3 @@
+{"type":"SCHEMA","stream":"stream","schema":{"type":"object","properties":{"id":{"type":"integer"}}},"key_properties":["id"]}
+{"type":"RECORD","stream":"stream","record":{}}
+{"type":"STATE","value":{}}

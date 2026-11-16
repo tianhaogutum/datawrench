@@ -1,0 +1,9 @@
+name: example
+seeds:
+  +delimiter: ";"
+  +column_types: {note: varchar}
+  example:
+    nested:
+      +delimiter: "\t"
+      comma_codes:
+        +delimiter: ","

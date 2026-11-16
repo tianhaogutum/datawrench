@@ -1,0 +1,4 @@
+id,amount,active,day,at,note
+1,1.10,true,2025-01-01,2025-01-01 12:30:00,"quoted, field"
+2,2.20,false,2025-01-02,2025-01-02 12:30:00.12,"two
+lines"

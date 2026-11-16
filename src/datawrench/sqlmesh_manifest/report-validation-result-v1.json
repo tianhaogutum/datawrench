@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Provenance report validation result v1",
+  "type": "object",
+  "properties": {
+    "validation_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "report_version": {
+      "enum": [
+        1,
+        null
+      ]
+    },
+    "counts": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "resources": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "models": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "seeds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sources": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tests": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "dependencies": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "resources",
+            "models",
+            "seeds",
+            "sources",
+            "tests",
+            "dependencies"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "diagnostics": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "enum": [
+              "report",
+              "manifest",
+              "pair"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^\\$(?:\\.[a-z_][a-z_0-9]*|\\[[0-9]+\\])*$",
+            "maxLength": 256
+          },
+          "rule": {
+            "enum": [
+              "read_json",
+              "report_version",
+              "manifest_version",
+              "manifest_validation",
+              "manifest_sha256",
+              "project_name",
+              "resource_ids",
+              "duplicate_resources",
+              "resources",
+              "resource_type",
+              "attachment",
+              "origin",
+              "duplicate_dependencies",
+              "dependencies",
+              "dependency_provenance",
+              "internal_error",
+              "schema.type",
+              "schema.const",
+              "schema.required",
+              "schema.additionalProperties",
+              "schema.minLength",
+              "schema.pattern",
+              "schema.enum"
+            ]
+          }
+        },
+        "required": [
+          "input",
+          "path",
+          "rule"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "validation_version",
+    "valid",
+    "report_version",
+    "counts",
+    "diagnostics"
+  ],
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "valid": {
+        "const": true
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "report_version": {
+        "type": "integer",
+        "const": 1
+      },
+      "counts": {
+        "type": "object",
+        "properties": {
+          "resources": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "models": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "seeds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sources": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tests": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "dependencies": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "resources",
+          "models",
+          "seeds",
+          "sources",
+          "tests",
+          "dependencies"
+        ],
+        "additionalProperties": false
+      },
+      "diagnostics": {
+        "maxItems": 0
+      }
+    }
+  },
+  "else": {
+    "properties": {
+      "report_version": {
+        "type": "null"
+      },
+      "counts": {
+        "type": "null"
+      },
+      "diagnostics": {
+        "minItems": 1
+      }
+    }
+  }
+}

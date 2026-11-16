@@ -1,0 +1,3 @@
+{"type":"SCHEMA","stream":"users","schema":{"type":"object","properties":{"id":{"type":"integer"},"updated":{"type":"integer"},"name":{"type":["string","null"]}}},"key_properties":["id"],"bookmark_properties":["updated"]}
+{"type":"BATCH","stream":"users","encoding":{"format":"jsonl","compression":null},"manifest":["file://batch.jsonl"]}
+{"type":"STATE","value":{"bookmarks":{"users":2}}}

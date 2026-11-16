@@ -1,0 +1,6 @@
+- name: raw.input
+  columns:
+    id: INT
+    retired: TEXT
+  column_descriptions:
+    id: Legacy identifier

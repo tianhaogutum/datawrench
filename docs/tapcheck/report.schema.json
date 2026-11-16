@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tapcheck validation report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["report_version","protocol","exit_code","valid","errors","stopped_early","input_lines","messages","diagnostics","streams"],
+  "properties": {
+    "report_version": {"const": 1},
+    "protocol": {"enum": ["singer","airbyte",null]},
+    "exit_code": {"enum": [0,1,2]},
+    "valid": {"type":"boolean"},
+    "errors": {"type":"integer","minimum":0},
+    "stopped_early": {"type":"boolean"},
+    "input_lines": {"type":"integer","minimum":0},
+    "messages": {"type":"object","additionalProperties":{"type":"integer","minimum":0}},
+    "diagnostics": {"type":"array","items":{"type":"object","additionalProperties":false,"required":["code","message","line","stream","source","path"],"properties":{
+      "code":{"type":"string","pattern":"^TC[0-9]{3}$"},"message":{"type":"string"},"line":{"type":"integer","minimum":0},"stream":{"type":["string","null"]},"source":{"type":"string"},"path":{"type":["array","null"],"items":{"type":["string","integer"]}}
+    }}},
+    "streams": {"type":"array","items":{"type":"object","additionalProperties":false,"required":["name","namespace","records","properties","replication_key","replication_min","replication_max","first_extraction_time","last_extraction_time"],"properties":{
+      "name":{"type":"string"},"namespace":{"type":["string","null"]},"records":{"type":"integer","minimum":0},
+      "properties":{"type":"object","additionalProperties":{"type":"object","additionalProperties":false,"required":["present","nulls","missing","null_rate"],"properties":{"present":{"type":"integer","minimum":0},"nulls":{"type":"integer","minimum":0},"missing":{"type":"integer","minimum":0},"null_rate":{"type":"number","minimum":0,"maximum":1}}}},
+      "replication_key":{"type":["array","null"],"items":{"type":"string"}},"replication_min":{"type":["string","number","null"]},"replication_max":{"type":["string","number","null"]},"first_extraction_time":{"type":["string","null"]},"last_extraction_time":{"type":["string","null"]}
+    }}}
+  }
+}

@@ -1,0 +1,364 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tapcheck data quality report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_version",
+    "report_kind",
+    "protocol",
+    "exit_code",
+    "valid",
+    "errors",
+    "stopped_early",
+    "coverage",
+    "input_lines",
+    "messages",
+    "example_limit",
+    "key_example_limit",
+    "errors_by_code",
+    "unassigned",
+    "streams",
+    "not_evaluated"
+  ],
+  "properties": {
+    "report_version": {
+      "const": 1
+    },
+    "report_kind": {
+      "const": "data_quality"
+    },
+    "protocol": {
+      "enum": [
+        "singer",
+        "airbyte",
+        null
+      ]
+    },
+    "exit_code": {
+      "enum": [
+        0,
+        1,
+        2
+      ]
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "errors": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stopped_early": {
+      "type": "boolean"
+    },
+    "coverage": {
+      "enum": [
+        "complete_input",
+        "partial_input"
+      ]
+    },
+    "input_lines": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "messages": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "example_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "errors_by_code": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^TC[0-9]{3}$"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "unassigned": {
+      "$ref": "#/$defs/issues"
+    },
+    "streams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stream"
+      }
+    },
+    "not_evaluated": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "key_example_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "$defs": {
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "source",
+        "line",
+        "path"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^TC[0-9]{3}$"
+        },
+        "source": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "integer"
+            ]
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "errors_by_code",
+        "examples",
+        "omitted_examples"
+      ],
+      "properties": {
+        "errors_by_code": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^TC[0-9]{3}$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "examples": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/example"
+          }
+        },
+        "omitted_examples": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "namespace",
+        "schemas",
+        "records",
+        "states",
+        "keys",
+        "duplicates",
+        "errors_by_code",
+        "examples",
+        "omitted_examples"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schemas": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "states": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "keys": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "paths",
+            "by_path",
+            "missing_fields",
+            "null_fields",
+            "records_with_missing_or_null_keys"
+          ],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "by_path": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "missing_fields",
+                  "null_fields",
+                  "examples",
+                  "omitted_examples"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "missing_fields": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "null_fields": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "examples": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "$ref": "#/$defs/key_example"
+                    }
+                  },
+                  "omitted_examples": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "missing_fields": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "null_fields": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "records_with_missing_or_null_keys": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "duplicates": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "evaluated_records",
+            "duplicate_keys"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "evaluated_records": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "duplicate_keys": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "errors_by_code": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^TC[0-9]{3}$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "examples": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/example"
+          }
+        },
+        "omitted_examples": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "key_example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "source",
+        "line"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "missing",
+            "null"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "command": "python scripts/dbt_integration.py",
+  "dbt_version": "1.12.6",
+  "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+  "full_manifest_sha256": "674ccf0440c2b588ef8cd27841191fed6c7a49f9051a189dbdc7c009d9a2b832",
+  "note": "Exact selected fields from actual dbt manifest nodes; no hand-authored compiled SQL. Local database paths refer to the retained .runs integration project."
+}

@@ -1,0 +1,5 @@
+customer_id,customer_name,region
+C001,Aster,EU
+C001,Aster historic,US
+C002,Birch,EU
+C004,Cedar,APAC

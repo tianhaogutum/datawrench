@@ -1,0 +1,524 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Join Witness report v1",
+  "description": "Shape contract for deterministic local join diagnostics. Additional fields are allowed for compatible v1 additions. Numeric sums are exact strings, counts are integers.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "tool": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "join-witness"
+        },
+        "version": {
+          "type": "string"
+        },
+        "upstream": {
+          "const": "tableproof"
+        },
+        "upstream_version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "upstream",
+        "upstream_version"
+      ]
+    },
+    "join_type": {
+      "enum": [
+        "inner",
+        "left",
+        "right",
+        "full"
+      ]
+    },
+    "expected_relationship": {
+      "enum": [
+        "one-to-one",
+        "one-to-many",
+        "many-to-one",
+        "many-to-many"
+      ]
+    },
+    "ranking": {
+      "type": "object",
+      "properties": {
+        "by": {
+          "anyOf": [
+            {
+              "const": "rows"
+            },
+            {
+              "type": "string",
+              "pattern": "^(left|right):[\\s\\S]+$"
+            }
+          ]
+        },
+        "order": {
+          "enum": [
+            "contract_excess_then_directional_copies",
+            "absolute_added_by_repetition"
+          ]
+        }
+      },
+      "required": [
+        "by",
+        "order"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail"
+      ]
+    },
+    "redacted": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "predicted_join_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "matched_key_groups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contributing_key_groups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contract_violating_matched_key_groups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contract_excess_matched_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "left_repeated_source_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "right_repeated_source_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "left_added_row_copies": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "right_added_row_copies": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reported_key_groups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "omitted_key_groups": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "predicted_join_rows",
+        "matched_key_groups",
+        "contributing_key_groups",
+        "contract_violating_matched_key_groups",
+        "contract_excess_matched_rows",
+        "left_repeated_source_rows",
+        "right_repeated_source_rows",
+        "left_added_row_copies",
+        "right_added_row_copies",
+        "reported_key_groups",
+        "omitted_key_groups"
+      ]
+    },
+    "sampling": {
+      "type": "object",
+      "properties": {
+        "top_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "records_per_key_per_side": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "values_byte_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "values_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "records_without_values": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sampled record values omitted specifically by the byte budget; redaction is counted separately by the redacted flag."
+        }
+      },
+      "required": [
+        "top_limit",
+        "records_per_key_per_side",
+        "values_byte_limit",
+        "values_bytes",
+        "records_without_values"
+      ]
+    },
+    "top_keys": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/key_group"
+      }
+    },
+    "measures": {
+      "type": "object",
+      "properties": {
+        "left": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/measure"
+          }
+        },
+        "right": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/measure"
+          }
+        }
+      },
+      "required": [
+        "left",
+        "right"
+      ]
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "enum": [
+              "left_unique",
+              "right_unique",
+              "left_nonblank",
+              "right_nonblank"
+            ]
+          },
+          "dialect": {
+            "const": "duckdb"
+          },
+          "sql": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "name",
+          "dialect",
+          "sql"
+        ]
+      }
+    },
+    "upstream_audit": {
+      "type": "object",
+      "required": [
+        "keys",
+        "left",
+        "right",
+        "predictions",
+        "verdict",
+        "findings",
+        "summary"
+      ],
+      "description": "TableProof per-audit object, not the enclosing audit_many report; see its upstream Report Schema v1."
+    },
+    "exit_status": {
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "fail_on": {
+      "enum": [
+        "error",
+        "warning"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "tool",
+    "join_type",
+    "expected_relationship",
+    "ranking",
+    "verdict",
+    "redacted",
+    "summary",
+    "sampling",
+    "top_keys",
+    "measures",
+    "assertions",
+    "upstream_audit"
+  ],
+  "dependentRequired": {
+    "exit_status": [
+      "fail_on"
+    ],
+    "fail_on": [
+      "exit_status"
+    ]
+  },
+  "$defs": {
+    "measure": {
+      "type": "object",
+      "properties": {
+        "source_sum": {
+          "type": "string",
+          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$",
+          "description": "Exact decimal string; coalesced sums use zero for empty/non-null-free sets."
+        },
+        "retained_once_sum": {
+          "type": "string",
+          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$",
+          "description": "Exact decimal string; coalesced sums use zero for empty/non-null-free sets."
+        },
+        "predicted_join_sum": {
+          "type": "string",
+          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$",
+          "description": "Exact decimal string; coalesced sums use zero for empty/non-null-free sets."
+        },
+        "added_by_repetition": {
+          "type": "string",
+          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$",
+          "description": "Exact decimal string; coalesced sums use zero for empty/non-null-free sets."
+        },
+        "dropped_sum": {
+          "type": "string",
+          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$",
+          "description": "Exact decimal string; coalesced sums use zero for empty/non-null-free sets."
+        },
+        "source_nonnull_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "predicted_nonnull_rows": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "source_sum",
+        "retained_once_sum",
+        "predicted_join_sum",
+        "added_by_repetition",
+        "dropped_sum",
+        "source_nonnull_rows",
+        "predicted_nonnull_rows"
+      ]
+    },
+    "record": {
+      "type": "object",
+      "properties": {
+        "record_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "line_start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "line_end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "join_copies": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "values_omitted": {
+          "const": "sample_byte_limit"
+        }
+      },
+      "required": [
+        "record_number",
+        "line_start",
+        "line_end",
+        "join_copies"
+      ],
+      "not": {
+        "required": [
+          "values",
+          "values_omitted"
+        ]
+      }
+    },
+    "key_group": {
+      "type": "object",
+      "properties": {
+        "key_id": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "key": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "violates_relationship": {
+          "type": "boolean"
+        },
+        "left_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "right_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "joined_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contract_excess_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "left_added_row_copies": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "right_added_row_copies": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "left_records_omitted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "right_records_omitted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "left_records": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/record"
+          }
+        },
+        "right_records": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/record"
+          }
+        },
+        "left_measures": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/measure"
+          }
+        },
+        "right_measures": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/measure"
+          }
+        },
+        "ranking_measure_added": {
+          "type": "string",
+          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$",
+          "description": "Exact decimal string; coalesced sums use zero for empty/non-null-free sets."
+        }
+      },
+      "required": [
+        "key_id",
+        "violates_relationship",
+        "left_count",
+        "right_count",
+        "joined_rows",
+        "contract_excess_rows",
+        "left_added_row_copies",
+        "right_added_row_copies",
+        "left_records_omitted",
+        "right_records_omitted",
+        "left_records",
+        "right_records",
+        "left_measures",
+        "right_measures"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "redacted": {
+            "const": true
+          }
+        },
+        "required": [
+          "redacted"
+        ]
+      },
+      "then": {
+        "properties": {
+          "top_keys": {
+            "items": {
+              "not": {
+                "required": [
+                  "key"
+                ]
+              },
+              "properties": {
+                "left_records": {
+                  "items": {
+                    "not": {
+                      "required": [
+                        "values"
+                      ]
+                    }
+                  }
+                },
+                "right_records": {
+                  "items": {
+                    "not": {
+                      "required": [
+                        "values"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

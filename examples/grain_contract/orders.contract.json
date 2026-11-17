@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "dialect": "duckdb",
+  "primary_keys": {"orders": ["id"], "customers": ["id"]},
+  "scopes": {
+    "$root": {
+      "grain": ["o.id"],
+      "joins": {"c": {"cardinality": "m:1", "preserve": "left"}}
+    }
+  },
+  "output_grain": ["order_id"]
+}

@@ -1,0 +1,14 @@
+﻿tenant,customer_id,name,note
+eu,001,Alice,first export
+eu,001,Alice duplicate,existing duplicate key
+eu,001　,Alice variant,ideographic trailing space
+eu,Café,Decomposed,combining acute accent
+eu,Café,Composed,NFC
+eu,A​B,Hidden space,U+200B
+eu,AB,Plain,no hidden character
+us,001,Other tenant,same customer id in another tenant
+eu,Ｍ１２,Full width,width conversion example
+eu,M12,ASCII,width counterpart
+eu,👩‍💻,Developer,ZWJ must survive all provided removal rules
+eu,zero,Notes stay intact,"﻿embedded BOM, quoted comma
+and newline"

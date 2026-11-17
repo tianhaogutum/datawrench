@@ -1,0 +1,5 @@
+order_id,customer_id,amount
+O101,C001,12.50
+O102,C001,7.50
+O103,C002,10.00
+O104,C003,5.00

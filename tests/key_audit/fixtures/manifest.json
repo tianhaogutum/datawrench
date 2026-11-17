@@ -1,0 +1,101 @@
+[
+  {
+    "file": "upstream/miller/mlr-output-quoted-comma.csv",
+    "sha256": "f932c3d9a8109e29f49da85d3c02bbf17d8af0b3a95ff9fefef9483484d4b960",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/rfc-csv/quoted-comma.csv",
+    "generated_by": "mlr 6.22.0 --csv cat"
+  },
+  {
+    "file": "upstream/miller/mlr-output-quoted-crlf.csv",
+    "sha256": "5095fed527786bdb9a4cab678f8316c86c45f21617a68dfad1895a96bcea6eee",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/rfc-csv/quoted-crlf.csv",
+    "generated_by": "mlr 6.22.0 --csv cat"
+  },
+  {
+    "file": "upstream/miller/mlr-output-utf8-1.csv",
+    "sha256": "c72a0b1e631ea06d1448e06038a85bc150fdf921720262205b4e1bf65e108d39",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/utf8-1.csv",
+    "generated_by": "mlr 6.22.0 --csv cat"
+  },
+  {
+    "file": "upstream/miller/mlr-output-utf8-2.csv",
+    "sha256": "561a54e7800d82b119d11921f10ac77726f11d6a196e33a0b285ef51300e7559",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/utf8-2.csv",
+    "generated_by": "mlr 6.22.0 --csv cat"
+  },
+  {
+    "file": "upstream/miller/quoted-comma-truncated.csv",
+    "sha256": "5f038331cec768be6ab47ff92a641b72f74b0aef8ea9c982f5e815295c9e1a10",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/rfc-csv/quoted-comma-truncated.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/quoted-comma.csv",
+    "sha256": "fe860fb27fc8c4ac1528345e1d742cea767e4ca1f4169739894f8cda32a8241c",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/rfc-csv/quoted-comma.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/quoted-crlf-truncated.csv",
+    "sha256": "ffc9deb3131a489d7bd7324165133175fa4c375e2974e3cb694722036125edf8",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/rfc-csv/quoted-crlf-truncated.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/quoted-crlf.csv",
+    "sha256": "e3a5ffe91455c30f445f63e5f84ce62346a476b4d62e54590630a9fe2c8aa22d",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/rfc-csv/quoted-crlf.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/quoted-numeric.csv",
+    "sha256": "8fae97d133ede42585f146b266a2d1c6e8c905275e7b469a68f8d5996437424f",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/docs/src/data/quoted-numeric.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/utf8-1.csv",
+    "sha256": "c72a0b1e631ea06d1448e06038a85bc150fdf921720262205b4e1bf65e108d39",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/utf8-1.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/utf8-2.csv",
+    "sha256": "561a54e7800d82b119d11921f10ac77726f11d6a196e33a0b285ef51300e7559",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/utf8-2.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/bom.csv",
+    "sha256": "352dcbce855b9021705c8325b613b99a57060891e965a51f18bd78398db28992",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/bom.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/bom-dquote-header.csv",
+    "sha256": "6fd07271a281365cd34a70dda729afaeb87ea789281ad4398e4aadc86ca100d0",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/bom-dquote-header.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/line-term-crlf.csv",
+    "sha256": "d335d132b841859509249b390997e9dbf022c9fe5e7d2e75e7ab0fc68ce390af",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/line-term-crlf.csv",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/miller/simple-crlf.csv",
+    "sha256": "a8158dd6469ad51dae2d93eedf21fd2734894048f2311531a4c0b7a0e2328d2e",
+    "source": "https://raw.githubusercontent.com/johnkerl/miller/v6.22.0/test/input/rfc-csv/simple.csv-crlf",
+    "generated_by": "unchanged upstream bytes"
+  },
+  {
+    "file": "upstream/csvkit/csvkit-output-semicolon.csv",
+    "sha256": "9ad91e1c8eed1f47cf3ca4e04718affb5d5e35362be8d29c1c861fd35fd24f87",
+    "source": "examples/key_audit/customers.csv (synthetic input in this repository)",
+    "generated_by": "csvkit 2.2.0 csvformat -D semicolon",
+    "csv_options": {
+      "delimiter": ";"
+    }
+  }
+]

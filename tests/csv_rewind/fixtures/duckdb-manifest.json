@@ -1,0 +1,70 @@
+{
+  "engine": "DuckDB 2.0.0",
+  "names": [
+    "supplier_id",
+    "long_id",
+    "received",
+    "amount",
+    "active",
+    "note"
+  ],
+  "rows": [
+    [
+      "000123",
+      "9007199254740993",
+      "31/01/2024",
+      "1.2300",
+      "TRUE",
+      "comma, and \"quotes\""
+    ],
+    [
+      "004200",
+      "9223372036854775808",
+      "29/02/2024",
+      "+2.50",
+      "FALSE",
+      "two\nlines"
+    ],
+    [
+      "123456",
+      "18446744073709551615",
+      "01/03/2024",
+      "1e3",
+      "TRUE",
+      "café | 供应方"
+    ],
+    [
+      "000000",
+      "100000000000000000001",
+      "04/03/2024",
+      "-0.00",
+      "FALSE",
+      ""
+    ]
+  ],
+  "files": {
+    "duckdb-comma.csv": {
+      "copy_options": "HEADER true",
+      "sha256": "4d0fb2ab9bd0227c5d6fdea6934055fc6526b4e041b8ffd8dac097e97d1476ba"
+    },
+    "duckdb-semicolon-crlf.csv": {
+      "copy_options": "HEADER true, DELIMITER ';', NEW_LINE '\r\n', FORCE_QUOTE *",
+      "sha256": "4ac25c162e570b2fb7e298dad9323375bdaab24793c3cb4f3ebec092eb059ec8"
+    },
+    "duckdb-no-header.tsv": {
+      "copy_options": "HEADER false, DELIMITER '\t'",
+      "sha256": "43505f6d8a2135122f641d659f74eb83828c1260fb2109fa049365c3c840cb81"
+    },
+    "duckdb-compressed.csv.gz": {
+      "copy_options": "HEADER true, COMPRESSION gzip",
+      "sha256": "222942bfff79e545564cefd00f5ff123837db8ec291bf913bc8304be93cc1ed5"
+    },
+    "duckdb-backslash.csv": {
+      "copy_options": "HEADER true, DELIMITER '|', ESCAPE '\\', FORCE_QUOTE *",
+      "sha256": "1940a6d3086e224c4308b5834a07db5228c1d486b91797018c3ee2da0205c997"
+    },
+    "duckdb-canonical.csv": {
+      "sha256": "f4a18d7ad4be0df4e7af7538dd80b63bcd923d3c30fdd7b09a5f7d307f8ee509"
+    }
+  }
+}

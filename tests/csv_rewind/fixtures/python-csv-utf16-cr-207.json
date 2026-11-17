@@ -1,0 +1,36 @@
+{
+  "case": 207,
+  "seed": 30202,
+  "delimiter": "\t",
+  "quote": "\"",
+  "encoding": "utf-16",
+  "newline": "\r",
+  "header": false,
+  "names": [
+    "col0",
+    "col1",
+    "col2",
+    "col3",
+    "col4",
+    "col5"
+  ],
+  "rows": [
+    [
+      "two\nlines",
+      "1e400",
+      "31/12/2024",
+      "NaN",
+      "00123",
+      "a'b"
+    ],
+    [
+      "crlf\r\ninside",
+      "﻿inside",
+      "0",
+      "-0.0",
+      "two\nlines",
+      "FALSE"
+    ]
+  ],
+  "sha256": "5254781077ad0f296336df0334ed1e070f1fe3556c07901db83f2c195060a99b"
+}

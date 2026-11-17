@@ -1,0 +1,41 @@
+{
+  "producer": "DuckDB 2.0.0 COPY",
+  "files": {
+    "duckdb-multi-pipe.csv": {
+      "delimiter": "||",
+      "note": "text||with \"quote\" and\nline",
+      "compression": "none",
+      "sha256": "d417c8f59c6e1533f84a4755c7f8da2e7849bd749eaca921b7f699444e7c6d28"
+    },
+    "duckdb-multi-pipe.csv.zst": {
+      "delimiter": "||",
+      "note": "text||with \"quote\" and\nline",
+      "compression": "zstd",
+      "sha256": "4544932237b2fef195edb7db198c6b406de006fec369c07f8a98047787b70125"
+    },
+    "duckdb-multi-colon.csv": {
+      "delimiter": "::",
+      "note": "text::with \"quote\" and\nline",
+      "compression": "none",
+      "sha256": "ad416a56470792632f5a80769a208e8c00654fc02639eae2bcd4fc83b5773079"
+    },
+    "duckdb-multi-colon.csv.zst": {
+      "delimiter": "::",
+      "note": "text::with \"quote\" and\nline",
+      "compression": "zstd",
+      "sha256": "ee8d332961973fb3933fbcb34c83a3d5819a4a96bc89be541d1b51bd370780fc"
+    },
+    "duckdb-multi-arrow.csv": {
+      "delimiter": "<->",
+      "note": "text<->with \"quote\" and\nline",
+      "compression": "none",
+      "sha256": "f2e299981e7850de345a105129c8155619c40d9d26073568704dba261a91a9f2"
+    },
+    "duckdb-multi-arrow.csv.zst": {
+      "delimiter": "<->",
+      "note": "text<->with \"quote\" and\nline",
+      "compression": "zstd",
+      "sha256": "f1b97974d6af5f14cba2213c9ff83c3c130c8ab05e58a33a8fc0897706dfafd9"
+    }
+  }
+}

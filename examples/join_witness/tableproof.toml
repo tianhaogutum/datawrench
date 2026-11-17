@@ -1,0 +1,18 @@
+version = 1
+
+[report]
+show_raw_keys = false
+sample_limit = 5
+fail_on = "error"
+
+[[joins]]
+name = "orders-to-customers"
+left = "orders.csv"
+right = "customers.csv"
+left_keys = ["customer_id"]
+right_keys = ["customer_id"]
+relationship = "many-to-one"
+left_unmatched = "warn"
+right_unmatched = "warn"
+null_keys = "error"
+join_type = "left"

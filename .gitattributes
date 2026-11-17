@@ -1,0 +1,5 @@
+# CSV/TSV fixtures pin exact bytes (CRLF, CR, BOM, UTF-16): never normalise line endings.
+*.csv -text whitespace=cr-at-eol
+*.tsv -text whitespace=cr-at-eol
+/tests/key_audit/fixtures/** -text whitespace=cr-at-eol
+/tests/csv_rewind/fixtures/** -text

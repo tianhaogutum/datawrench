@@ -1,0 +1,62 @@
+{
+  "case": 176,
+  "seed": 30202,
+  "delimiter": "\t",
+  "quote": "'",
+  "encoding": "utf-16",
+  "newline": "\r",
+  "header": false,
+  "names": [
+    "col0",
+    "col1",
+    "col2"
+  ],
+  "rows": [
+    [
+      "two\nlines",
+      "true",
+      "1.00"
+    ],
+    [
+      "9007199254740993",
+      "crlf\r\ninside",
+      "crlf\r\ninside"
+    ],
+    [
+      "NULL",
+      "1.00",
+      "供应方"
+    ],
+    [
+      " 42 ",
+      "-0.0",
+      "-0.0"
+    ],
+    [
+      "1.00",
+      "NaN",
+      "NULL"
+    ],
+    [
+      "",
+      "NA",
+      "a;b"
+    ],
+    [
+      "1e400",
+      "\\back\\slash",
+      "zero\u0000byte"
+    ],
+    [
+      "9007199254740993",
+      "a\tb",
+      "﻿inside"
+    ],
+    [
+      "供应方",
+      "1e400",
+      "9007199254740993"
+    ]
+  ],
+  "sha256": "1fd97f7921a6a64bea0f089aaebd805b87d8858c30d33151e7f17bf01969e827"
+}

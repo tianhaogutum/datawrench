@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "dialect": "duckdb",
+  "sqlglot_version": "30.31.0",
+  "source_sha256": "e186d8fbcf1ca94eab332cf696580f4b5879b11d089bc87570c49ad28d4eb7b0",
+  "contract_sha256": "749054066b3d921382d21b2df4540fba47bbd2f13b63a83ffc318f414e3fe547",
+  "checks": [
+    {
+      "id": "gc_001_primary_key",
+      "kind": "primary_key",
+      "scope": "$root",
+      "join": null,
+      "description": "orders primary key is unique and nonnull",
+      "sql": "SELECT\n  k0,\n  COUNT(*) AS occurrences\nFROM (\n  SELECT\n    o.id AS k0\n  FROM orders AS o\n) AS gc_keys\nGROUP BY\n  k0\nHAVING\n  COUNT(*) > 1 OR k0 IS NULL;\n",
+      "key_columns": [
+        "o.id"
+      ]
+    },
+    {
+      "id": "gc_002_primary_key",
+      "kind": "primary_key",
+      "scope": "$root",
+      "join": null,
+      "description": "customers primary key is unique and nonnull",
+      "sql": "SELECT\n  k0,\n  COUNT(*) AS occurrences\nFROM (\n  SELECT\n    c.id AS k0\n  FROM customers AS c\n) AS gc_keys\nGROUP BY\n  k0\nHAVING\n  COUNT(*) > 1 OR k0 IS NULL;\n",
+      "key_columns": [
+        "c.id"
+      ]
+    },
+    {
+      "id": "gc_003_grain",
+      "kind": "grain",
+      "scope": "$root",
+      "join": null,
+      "description": "input grain is unique and nonnull",
+      "sql": "SELECT\n  k0,\n  COUNT(*) AS occurrences\nFROM (\n  SELECT\n    o.id AS k0\n  FROM orders AS o\n) AS gc_keys\nGROUP BY\n  k0\nHAVING\n  COUNT(*) > 1 OR k0 IS NULL;\n",
+      "key_columns": [
+        "o.id"
+      ]
+    },
+    {
+      "id": "gc_004_join_key",
+      "kind": "join_key",
+      "scope": "$root",
+      "join": "c",
+      "description": "right join keys are unique (ordinary = ignores NULL keys)",
+      "sql": "SELECT\n  k0,\n  COUNT(*) AS occurrences\nFROM (\n  SELECT\n    c.id AS k0\n  FROM customers AS c\n) AS gc_keys\nWHERE\n  NOT k0 IS NULL\nGROUP BY\n  k0\nHAVING\n  COUNT(*) > 1;\n",
+      "key_columns": [
+        "c.id"
+      ]
+    },
+    {
+      "id": "gc_005_join_cardinality",
+      "kind": "join_cardinality",
+      "scope": "$root",
+      "join": "c",
+      "description": "each left grain matches at most one right row",
+      "sql": "SELECT\n  k0,\n  COUNT(*) AS occurrences\nFROM (\n  SELECT\n    o.id AS k0\n  FROM orders AS o\n  INNER JOIN customers AS c\n    ON o.customer_id = c.id\n) AS gc_keys\nWHERE\n  NOT k0 IS NULL\nGROUP BY\n  k0\nHAVING\n  COUNT(*) > 1;\n",
+      "key_columns": [
+        "o.id"
+      ]
+    },
+    {
+      "id": "gc_006_row_count",
+      "kind": "row_count",
+      "scope": "$root",
+      "join": "c",
+      "description": "join preserves the left input row count",
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    (\n      SELECT\n        COUNT(*)\n      FROM (\n        SELECT\n          1\n        FROM orders AS o\n      ) AS gc_before\n    ) AS expected_rows,\n    (\n      SELECT\n        COUNT(*)\n      FROM (\n        SELECT\n          1\n        FROM orders AS o\n        LEFT JOIN customers AS c\n          ON o.customer_id = c.id\n      ) AS gc_after\n    ) AS actual_rows\n) AS gc_counts\nWHERE\n  expected_rows <> actual_rows;\n",
+      "key_columns": []
+    },
+    {
+      "id": "gc_007_preservation",
+      "kind": "preservation",
+      "scope": "$root",
+      "join": "c",
+      "description": "join preserves every left input grain, including multiplicity",
+      "sql": "SELECT\n  k0,\n  SUM(before_rows) AS expected_rows,\n  SUM(after_rows) AS actual_rows\nFROM (\n  SELECT\n    k0,\n    COUNT(*) AS before_rows,\n    0 AS after_rows\n  FROM (\n    SELECT\n      o.id AS k0\n    FROM orders AS o\n  ) AS gc_before\n  GROUP BY\n    k0\n  UNION ALL\n  SELECT\n    k0,\n    0 AS before_rows,\n    COUNT(*) AS after_rows\n  FROM (\n    SELECT\n      o.id AS k0\n    FROM orders AS o\n    LEFT JOIN customers AS c\n      ON o.customer_id = c.id\n  ) AS gc_after\n  GROUP BY\n    k0\n) AS gc_bag\nGROUP BY\n  k0\nHAVING\n  SUM(before_rows) <> SUM(after_rows);\n",
+      "key_columns": [
+        "o.id"
+      ]
+    },
+    {
+      "id": "gc_008_grain",
+      "kind": "grain",
+      "scope": "$root",
+      "join": "c",
+      "description": "join output grain is unique and nonnull",
+      "sql": "SELECT\n  k0,\n  COUNT(*) AS occurrences\nFROM (\n  SELECT\n    o.id AS k0\n  FROM orders AS o\n  LEFT JOIN customers AS c\n    ON o.customer_id = c.id\n) AS gc_keys\nGROUP BY\n  k0\nHAVING\n  COUNT(*) > 1 OR k0 IS NULL;\n",
+      "key_columns": [
+        "o.id"
+      ]
+    },
+    {
+      "id": "gc_009_output_grain",
+      "kind": "output_grain",
+      "scope": "$root",
+      "join": null,
+      "description": "complete model output grain is unique and nonnull",
+      "sql": "SELECT\n  k0,\n  COUNT(*) AS occurrences\nFROM (\n  SELECT\n    order_id AS k0\n  FROM (\n    SELECT\n      o.id AS order_id,\n      c.name AS customer_name,\n      o.amount\n    FROM orders AS o\n    LEFT JOIN customers AS c\n      ON o.customer_id = c.id\n  ) AS gc_model\n) AS gc_keys\nGROUP BY\n  k0\nHAVING\n  COUNT(*) > 1 OR k0 IS NULL;\n",
+      "key_columns": [
+        "order_id"
+      ]
+    }
+  ],
+  "joins": [
+    {
+      "scope": "$root",
+      "position": 1,
+      "join_type": "LEFT",
+      "left_aliases": [
+        "o"
+      ],
+      "right_alias": "c",
+      "right_source": "customers AS c",
+      "predicate": "o.customer_id = c.id",
+      "left_keys": [
+        "o.customer_id"
+      ],
+      "right_keys": [
+        "c.id"
+      ],
+      "grain_before": [
+        "o.id"
+      ],
+      "grain_after": [
+        "o.id"
+      ],
+      "cardinality": "m:1",
+      "preserve": "left"
+    }
+  ],
+  "generator": "sql-grain-contract",
+  "dbt_model": "orders",
+  "output_files": [
+    "orders__gc_001_primary_key.sql",
+    "orders__gc_002_primary_key.sql",
+    "orders__gc_003_grain.sql",
+    "orders__gc_004_join_key.sql",
+    "orders__gc_005_join_cardinality.sql",
+    "orders__gc_006_row_count.sql",
+    "orders__gc_007_preservation.sql",
+    "orders__gc_008_grain.sql",
+    "orders__gc_009_output_grain.sql"
+  ]
+}

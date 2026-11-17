@@ -1,0 +1,178 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.10.15",
+    "generated_at": "2026-11-11T22:11:27.485052Z",
+    "invocation_id": "0380612f-58de-40fa-bc22-50b396061546",
+    "invocation_started_at": "2026-11-11T22:11:27.277511Z",
+    "env": {},
+    "project_name": "grain_contract_demo",
+    "project_id": "1ce2dc21195d4ad395a6263edaf4d3f9",
+    "user_id": null,
+    "send_anonymous_usage_stats": false,
+    "adapter_type": "duckdb",
+    "quoting": {
+      "database": true,
+      "schema": true,
+      "identifier": true,
+      "column": null
+    }
+  },
+  "nodes": {
+    "model.grain_contract_demo.stg_customers": {
+      "name": "stg_customers",
+      "resource_type": "model",
+      "package_name": "grain_contract_demo",
+      "unique_id": "model.grain_contract_demo.stg_customers",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "80e3223cd54387e11fa16cd0f4cbe15f8ff74dcd9900b93856b9e39416178c9d"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"stg_customers\"",
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "seed.grain_contract_demo.raw_customers"
+        ]
+      },
+      "compiled_code": "with source as (\n    select * from \"warehouse\".\"main\".\"raw_customers\"\n\n),\n\nrenamed as (\n\n    select\n        id as customer_id,\n        first_name,\n        last_name\n\n    from source\n\n)\n\nselect * from renamed"
+    },
+    "model.grain_contract_demo.customers": {
+      "name": "customers",
+      "resource_type": "model",
+      "package_name": "grain_contract_demo",
+      "unique_id": "model.grain_contract_demo.customers",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "60bd72e33da43fff3a7e7609135c17cd4468bd22afec0735dd36018bfb5af30a"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"customers\"",
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "model.grain_contract_demo.stg_customers",
+          "model.grain_contract_demo.stg_orders",
+          "model.grain_contract_demo.stg_payments"
+        ]
+      },
+      "compiled_code": "with customers as (\n\n    select * from \"warehouse\".\"main\".\"stg_customers\"\n\n),\n\norders as (\n\n    select * from \"warehouse\".\"main\".\"stg_orders\"\n\n),\n\npayments as (\n\n    select * from \"warehouse\".\"main\".\"stg_payments\"\n\n),\n\ncustomer_orders as (\n\n        select\n        customer_id,\n\n        min(order_date) as first_order,\n        max(order_date) as most_recent_order,\n        count(order_id) as number_of_orders\n    from orders\n\n    group by customer_id\n\n),\n\ncustomer_payments as (\n\n    select\n        orders.customer_id,\n        sum(amount) as total_amount\n\n    from payments\n\n    left join orders on\n         payments.order_id = orders.order_id\n\n    group by orders.customer_id\n\n),\n\nfinal as (\n\n    select\n        customers.customer_id,\n        customers.first_name,\n        customers.last_name,\n        customer_orders.first_order,\n        customer_orders.most_recent_order,\n        customer_orders.number_of_orders,\n        customer_payments.total_amount as customer_lifetime_value\n\n    from customers\n\n    left join customer_orders\n        on customers.customer_id = customer_orders.customer_id\n\n    left join customer_payments\n        on  customers.customer_id = customer_payments.customer_id\n\n)\n\nselect * from final"
+    },
+    "model.grain_contract_demo.order_enriched": {
+      "name": "order_enriched",
+      "resource_type": "model",
+      "package_name": "grain_contract_demo",
+      "unique_id": "model.grain_contract_demo.order_enriched",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "9c7ada27b5e18ceab8ebc2d71b0faa190f583fecd7767e05415cf838d78de744"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"order_enriched\"",
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "model.grain_contract_demo.stg_orders",
+          "model.grain_contract_demo.stg_customers"
+        ]
+      },
+      "compiled_code": "SELECT o.order_id, c.first_name\nFROM \"warehouse\".\"main\".\"stg_orders\" AS o\nLEFT JOIN \"warehouse\".\"main\".\"stg_customers\" AS c ON o.customer_id = c.customer_id"
+    },
+    "model.grain_contract_demo.stg_payments": {
+      "name": "stg_payments",
+      "resource_type": "model",
+      "package_name": "grain_contract_demo",
+      "unique_id": "model.grain_contract_demo.stg_payments",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "9c1ee3bfb10e07c2dfc325d55925da0e521887136d9051768cb8acf09dc86bda"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"stg_payments\"",
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "seed.grain_contract_demo.raw_payments"
+        ]
+      },
+      "compiled_code": "with source as (\n    select * from \"warehouse\".\"main\".\"raw_payments\"\n\n),\n\nrenamed as (\n\n    select\n        id as payment_id,\n        order_id,\n        payment_method,\n\n        -- `amount` is currently stored in cents, so we convert it to dollars\n        amount / 100 as amount\n\n    from source\n\n)\n\nselect * from renamed"
+    },
+    "model.grain_contract_demo.stg_orders": {
+      "name": "stg_orders",
+      "resource_type": "model",
+      "package_name": "grain_contract_demo",
+      "unique_id": "model.grain_contract_demo.stg_orders",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "f4f881cb09d2c4162200fc331d7401df6d1abd4fed492554a7db70dede347108"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"stg_orders\"",
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "seed.grain_contract_demo.raw_orders"
+        ]
+      },
+      "compiled_code": "with source as (\n    select * from \"warehouse\".\"main\".\"raw_orders\"\n\n),\n\nrenamed as (\n\n    select\n        id as order_id,\n        user_id as customer_id,\n        order_date,\n        status\n\n    from source\n\n)\n\nselect * from renamed"
+    },
+    "model.grain_contract_demo.orders": {
+      "name": "orders",
+      "resource_type": "model",
+      "package_name": "grain_contract_demo",
+      "unique_id": "model.grain_contract_demo.orders",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "27f8c79aad1cfd8411ab9c3d2ce8da1d787f7f05c58bbee1d247510dc426be0f"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"orders\"",
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "model.grain_contract_demo.stg_orders",
+          "model.grain_contract_demo.stg_payments"
+        ]
+      },
+      "compiled_code": "\n\nwith orders as (\n\n    select * from \"warehouse\".\"main\".\"stg_orders\"\n\n),\n\npayments as (\n\n    select * from \"warehouse\".\"main\".\"stg_payments\"\n\n),\n\norder_payments as (\n\n    select\n        order_id,\n\n        sum(case when payment_method = 'credit_card' then amount else 0 end) as credit_card_amount,\n        sum(case when payment_method = 'coupon' then amount else 0 end) as coupon_amount,\n        sum(case when payment_method = 'bank_transfer' then amount else 0 end) as bank_transfer_amount,\n        sum(case when payment_method = 'gift_card' then amount else 0 end) as gift_card_amount,\n        sum(amount) as total_amount\n\n    from payments\n\n    group by order_id\n\n),\n\nfinal as (\n\n    select\n        orders.order_id,\n        orders.customer_id,\n        orders.order_date,\n        orders.status,\n\n        order_payments.credit_card_amount,\n\n        order_payments.coupon_amount,\n\n        order_payments.bank_transfer_amount,\n\n        order_payments.gift_card_amount,\n\n        order_payments.total_amount as amount\n\n    from orders\n\n\n    left join order_payments\n        on orders.order_id = order_payments.order_id\n\n)\n\nselect * from final"
+    },
+    "seed.grain_contract_demo.raw_customers": {
+      "name": "raw_customers",
+      "resource_type": "seed",
+      "package_name": "grain_contract_demo",
+      "unique_id": "seed.grain_contract_demo.raw_customers",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "357d173dda65a741ad97d6683502286cc2655bb396ab5f4dfad12b8c39bd2a63"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"raw_customers\"",
+      "depends_on": {
+        "macros": []
+      }
+    },
+    "seed.grain_contract_demo.raw_orders": {
+      "name": "raw_orders",
+      "resource_type": "seed",
+      "package_name": "grain_contract_demo",
+      "unique_id": "seed.grain_contract_demo.raw_orders",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "ddecd7adf70a07a88b9c302aec2a03fce615b925c2c06f2d5ef99a5c97b41250"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"raw_orders\"",
+      "depends_on": {
+        "macros": []
+      }
+    },
+    "seed.grain_contract_demo.raw_payments": {
+      "name": "raw_payments",
+      "resource_type": "seed",
+      "package_name": "grain_contract_demo",
+      "unique_id": "seed.grain_contract_demo.raw_payments",
+      "checksum": {
+        "name": "sha256",
+        "checksum": "6de0626a8db9c1750eefd1b2e17fac4c2a4b9f778eb50532d8b377b90de395e6"
+      },
+      "relation_name": "\"warehouse\".\"main\".\"raw_payments\"",
+      "depends_on": {
+        "macros": []
+      }
+    }
+  },
+  "sources": {}
+}

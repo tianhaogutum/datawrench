@@ -1,0 +1,12 @@
+schema_type: dataframe
+api: pandas
+columns:
+  order_id:
+    dtype: int64
+    unique: true
+  amount:
+    dtype: float64
+    greater_than_or_equal_to: 0
+  note:
+    dtype: string[python]
+strict: true

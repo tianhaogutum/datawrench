@@ -1,0 +1,12 @@
+PRAGMA foreign_keys=OFF;
+BEGIN;
+CREATE TABLE accounts_new(id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance REAL DEFAULT 0);
+INSERT INTO accounts_new SELECT * FROM accounts;
+DROP TABLE accounts;
+PRAGMA legacy_alter_table=ON;
+ALTER TABLE accounts_new RENAME TO accounts;
+PRAGMA legacy_alter_table=OFF;
+CREATE INDEX balance_idx ON accounts(balance) WHERE balance > 0;
+CREATE TRIGGER account_audit AFTER UPDATE OF balance ON accounts BEGIN INSERT INTO audit VALUES(new.id, 'balance changed'); END;
+COMMIT;
+PRAGMA foreign_keys=ON;

@@ -16,10 +16,11 @@ DEBUG_ENV = "DATAWRENCH_CHECK_DEBUG"
 
 DBT = "dbt & SQLMesh"
 SQL = "SQL quality"
+KEYS = "Keys & joins"
 FRAMES = "DataFrames & files"
 SINGER = "Singer pipelines"
 INPUTS = "Inputs"
-AREAS = (DBT, SQL, FRAMES, SINGER, INPUTS)
+AREAS = (DBT, SQL, KEYS, FRAMES, SINGER, INPUTS)
 
 
 @dataclass(frozen=True)
@@ -85,6 +86,19 @@ CHECKS: tuple[Check, ...] = (
                  "invalid-config", "summary"),
           requires=("sqlglot", "duckdb", "yaml"), extra="sqlglot,duckdb",
           note="needs --dialect FROM:TO (FROM can come from the dbt manifest: --dialect :duckdb)"),
+    Check("join-witness", KEYS,
+          "TableProof join contracts (*.toml with [[joins]]): duplicate or blank keys, relationship violations, "
+          "many-to-many expansion and unmatched keys, with predicted rows above the contract caps",
+          frozenset({"tableproof-config"}), checks.join_witness,
+          rules=("TP_<TableProof finding code>", "summary", "invalid-contract", "not-checked"),
+          requires=("tableproof",), extra="tableproof",
+          note="reads the CSV/TSV files the contract names; reports counts only, never key values"),
+    Check("grain-contract", KEYS,
+          "Grain contracts (JSON next to a SELECT): declarations that do not compile against the SQL "
+          "(undeclared or unsupported joins, bad keys or grain); nothing is executed",
+          frozenset({"grain-contract"}), checks.grain_contract,
+          rules=("invalid-contract", "compiled", "dbt-contract", "no-sql"),
+          requires=("sqlglot",), extra="sqlglot"),
     Check("polars-vet", FRAMES,
           "Python files that import polars: eager reads turned lazy, Python lambdas, row loops, with_columns or "
           "concat in loops, sort+head, pandas round trips",

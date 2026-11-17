@@ -2,8 +2,9 @@
 
 Only these are opened: ``*.py``, ``*.sql``, ``*.csv``, ``*.parquet`` (footers
 are read later, by the check), ``*.json``, ``*.jsonl``, ``*.ndjson``,
-``*.singer``, ``dbt_project.yml``, ``.sqlfluff`` and the ``pyproject.toml`` /
-``setup.cfg`` / ``tox.ini`` files that may hold a SQLFluff section. A file that
+``*.singer``, ``*.toml`` (TableProof join contracts), ``dbt_project.yml``,
+``.sqlfluff`` and the ``pyproject.toml`` / ``setup.cfg`` / ``tox.ini`` files
+that may hold a SQLFluff section. A file that
 is not a known input (a ``package.json``, a Python file that does not import
 Polars) is skipped silently. Nothing is written, nothing is executed and no
 symlinked directory is followed.
@@ -42,6 +43,11 @@ SQLMESH_CONFIGS = ("config.yaml", "config.yml", "config.py")
 SQLMESH_MARKERS = re.compile(r"\bmodel_defaults\b|\bgateways\b|\bsqlmesh\b")
 CASSETTE_FILES = frozenset({"manifest.json", "messages.jsonl.gz", "catalog.json"})
 MESSAGE_SUFFIXES = (".jsonl", ".ndjson", ".singer")
+# A TableProof v1 join contract (join-witness): a TOML file with [[joins]] tables that declare a relationship.
+TABLEPROOF_JOINS = re.compile(r"^[ \t]*\[\[[ \t]*joins[ \t]*\]\]", re.MULTILINE)
+TABLEPROOF_RELATIONSHIP = re.compile(r"^[ \t]*relationship[ \t]*=", re.MULTILINE)
+# The top-level fields of a grain-contract declaration (version 1).
+GRAIN_CONTRACT_FIELDS = frozenset({"version", "dialect", "primary_keys", "scopes", "output_grain"})
 # Names that announce a JSON input: such files are reported when they do not parse.
 ANNOUNCED_JSON = frozenset({"manifest.json", "catalog.json"})
 
@@ -58,6 +64,8 @@ KINDS = {
     "singer-messages": "Singer/Airbyte message file",
     "singer-catalog": "Singer/Airbyte catalog",
     "singer-cassette": "singer-replay cassette",
+    "tableproof-config": "TableProof join contract",
+    "grain-contract": "grain contract",
 }
 FOLDER_KINDS = frozenset({"dbt-project", "sqlmesh-project", "parquet-dataset", "duckmate-migrations",
                           "singer-cassette"})
@@ -143,6 +151,13 @@ def is_catalog(data: Any) -> bool:
         return True
     inner = first.get("stream", first)
     return isinstance(inner, dict) and isinstance(inner.get("json_schema"), dict) and isinstance(inner.get("name"), str)
+
+
+def is_grain_contract(data: Any) -> bool:
+    """A grain-contract declaration (version 1): primary keys, scopes and the output grain."""
+    return (isinstance(data, dict) and data.get("version") == 1 and set(data) <= GRAIN_CONTRACT_FIELDS
+            and isinstance(data.get("primary_keys"), dict) and isinstance(data.get("scopes"), dict)
+            and "output_grain" in data)
 
 
 def message_protocol(line: bytes) -> str | None:
@@ -260,6 +275,13 @@ def _inspect(path: Path, display: str, explicit: bool, result: Discovery) -> Non
             text = _read_text(path, SNIFF_BYTES)
             if lower == ".sqlfluff" or (text and SQLFLUFF_SECTION.search(text)):
                 result.sources.append(Source(path, display, "sqlfluff-config"))
+        elif suffix == ".toml":
+            result.scanned += 1
+            text = _read_text(path, SNIFF_BYTES)
+            if text and TABLEPROOF_JOINS.search(text) and TABLEPROOF_RELATIONSHIP.search(text):
+                result.sources.append(Source(path, display, "tableproof-config"))
+            elif explicit:
+                result.findings.append(_unrecognised(display, "not a TableProof join contract"))
         elif suffix in MESSAGE_SUFFIXES:
             result.scanned += 1
             protocol = message_protocol(_first_line(path))
@@ -301,8 +323,11 @@ def _inspect_json(path: Path, display: str, explicit: bool, result: Discovery) -
         result.sources.append(Source(path, display, "dbt-manifest", meta=meta))
     elif is_catalog(data):
         result.sources.append(Source(path, display, "singer-catalog", data=data))
+    elif is_grain_contract(data):
+        result.sources.append(Source(path, display, "grain-contract", data=data))
     elif explicit:
-        result.findings.append(_unrecognised(display, "not a dbt manifest or a Singer/Airbyte catalog"))
+        result.findings.append(_unrecognised(display, "not a dbt manifest, a Singer/Airbyte catalog or a grain "
+                                                      "contract"))
 
 
 # --------------------------------------------------------------------------- walking

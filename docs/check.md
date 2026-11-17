@@ -4,8 +4,9 @@
 before the warehouse does**: breaking changes to enforced dbt model contracts,
 seed columns whose default CSV read changes the text, Parquet files that no
 longer share a schema, slow Polars patterns, SQL that will not translate to
-another dialect, DuckDB migrations that will not run, and Singer tap output
-that breaks its own contract.
+another dialect, DuckDB migrations that will not run, joins that multiply rows
+beyond their TableProof contract, grain contracts that no longer compile against
+their SQL, and Singer tap output that breaks its own contract.
 
 It is the front door to the other datawrench commands. It does not reimplement
 their analysis: each check calls the read-only Python API of one tool and turns
@@ -76,6 +77,8 @@ inside it (such as `manifest.json`) are read, never `target/compiled` or
 | Singer/Airbyte message file | `*.jsonl`, `*.ndjson`, `*.singer` (or a `*.json` that is really JSON Lines) whose first line is a Singer or Airbyte message |
 | Singer/Airbyte catalog | JSON with a `streams` array of Singer (`tap_stream_id`, `schema`) or Airbyte (`json_schema`) entries |
 | singer-replay cassette | a folder with `manifest.json`, `messages.jsonl.gz` and `catalog.json` |
+| TableProof join contract | `*.toml` with a `[[joins]]` table and a `relationship =` line (TableProof v1, as read by `join-witness`) |
+| grain contract | JSON with `version: 1`, `primary_keys`, `scopes` and `output_grain` and no other top-level fields; its SQL is `NAME.sql` next to `NAME.contract.json` |
 
 A `manifest.json` or `catalog.json` that does not parse is reported as
 `parse/invalid-json`; other unparseable JSON is skipped silently. Files you
@@ -92,6 +95,8 @@ a check with nothing to look at stays silent.
 | | `sqlmesh-manifest` | `read_manifest`, `validate_manifest` | for SQLMesh projects: `invalid-manifest` / `valid` for the exported manifest inside the project, `not-exported` with the export command when there is none | `sqlmesh` |
 | SQL quality | `lint-cache` | `lint(..., no_cache=True)` | SQLFluff violations per file and rule code (rule id `lint-cache/LT01` etc., first line, count), `PRS` / `TMP` parse and templating errors; `needs-config` without a SQLFluff config, `templater-not-run` for the dbt templater or a Python `library_path` | `sqlfluff` |
 | | `dialect-audit` | `run_audit` | with `--dialect FROM:TO`: `parse-error`, `command-fallback`, `unsupported`, `anonymous-function`, `roundtrip-unstable` per statement, `bind-error` / `unknown-table` with `--sql-schema`, `jinja-skipped`, `summary`; without it `needs-dialect` | `sqlglot,duckdb` |
+| Keys & joins | `join-witness` | TableProof `load_config`, `analyze(..., redact=True)` (no samples) | TableProof finding codes per join (`TP_RELATIONSHIP_VIOLATION`, `TP_MANY_TO_MANY_EXPANSION`, `TP_LEFT_UNMATCHED`, ...; TableProof's `error`/`warn`/`info`), `summary` with predicted join rows and the rows above the contract caps; `invalid-contract`, `not-checked`. Reads the CSV/TSV files the contract names; reports counts only, never key values | `tableproof` |
+| | `grain-contract` | `compile_contract` (SQLGlot only, nothing executed) | `invalid-contract` when the declarations do not compile against the paired SELECT (undeclared or unsupported joins, bad keys or grain), `compiled`; `dbt-contract` for contracts with `ref:`/`source:` keys (they need `from-dbt` and a manifest), `no-sql` without a paired SQL file | `sqlglot` |
 | DataFrames & files | `polars-vet` | `analyze` | `PLV001`–`PLV011` (see [polars-vet rules](polars-vet/rules.md)), `PLV000` for files it cannot fully analyse | |
 | | `parquet-unify` | `scan`, `Catalog.report` (footers only) | `type-conflict` no lossless common type, `widenable`, `missing-column`, `unreadable` footers, `schema-groups` / `consistent` | `parquet` |
 | | `seedtypes` | `check_project`, `compare` | `unpinned-lossy` a seed column the default DuckDB or Polars read changes and `column_types` does not pin, `reader-failed`, `summary`; for CSV files outside dbt, `lossy-default` (info) | `duckdb,polars` |
@@ -131,7 +136,8 @@ Rule ids are `check/rule`, for example `contract-diff/breaking` or
 - **error**: it will break as it stands: a breaking contract change, a Parquet
   column with no lossless common type, a migration section DuckDB cannot parse
   or duckmate refuses, a record without its primary key, a SQL statement that
-  does not parse, a cassette that does not verify.
+  does not parse, a cassette that does not verify, a join that breaks its
+  TableProof relationship, a grain contract that does not compile.
 - **warning**: it will probably bite: a seed column whose default read drops
   leading zeros, slow Polars patterns, Parquet types that differ between files,
   unknown functions in a dialect migration, tap output with no final STATE.
@@ -242,5 +248,10 @@ for finding in findings:
   Postgres or MySQL are left alone.
 - dialect-audit reports what SQLGlot cannot translate or verify, not proof that
   translated SQL is equivalent.
+- Not every command has a check. `csv-rewind` needs a proposed schema,
+  `key-audit` needs the key columns and an ordered rule list, `rebuild-check`
+  runs a migration on a database backup and `failurepack` runs a chosen Pandera
+  failure many times; none of that can be inferred from file content or done
+  read-only, so run those commands directly.
 - Each tool reads a documented, strict input format and says (as an info or
   warning finding) when it refuses an input instead of guessing.

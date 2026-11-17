@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "datawrench"
 version = "0.1.0"
-description = "Catch breaking dbt contract changes, SQL dialect traps, CSV type drift, Parquet schema mismatches and broken Singer taps before they hit the warehouse — one offline CLI."
+description = "Catch breaking dbt contract changes, SQL dialect traps, fan-out joins, CSV type drift, Parquet schema mismatches and broken Singer taps before they hit the warehouse — one offline CLI."
 # README.md with repository-relative links rewritten for PyPI (see tool.hatch.metadata.hooks below).
 dynamic = ["readme"]
 requires-python = ">=3.11"
@@ -15,8 +15,8 @@ authors = [{ name = "tianhaogutum" }]
 keywords = [
     "dbt", "dbt-contracts", "sqlmesh", "sql", "sqlglot", "sql-dialects", "sqlfluff", "linting",
     "duckdb", "polars", "parquet", "pyarrow", "csv", "seeds", "schema-drift", "migrations",
-    "dbmate", "singer", "airbyte", "meltano", "data-quality", "data-engineering", "sarif",
-    "devtools", "cli",
+    "dbmate", "singer", "airbyte", "meltano", "sqlite", "sqlite-utils", "pandera", "joins",
+    "grain", "unicode", "data-quality", "data-engineering", "sarif", "devtools", "cli",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -46,9 +46,10 @@ dependencies = ["PyYAML>=6.0.2"]
 # requires sqlglot~=30.8.0, so >=30.8 keeps `datawrench[all,sqlmesh]` resolvable.
 # sqlglot majors rename AST classes, so stay below 31.
 sqlglot = ["sqlglot>=30.8,<31"]
-# duckmate, dialect-audit, parquet-unify, seedtypes. fsspec: DuckDB's Python client needs it
-# to read the in-memory file-like CSV batches seedtypes hands it.
-duckdb = ["duckdb>=1.4.2,<2", "fsspec>=2025.10.0"]
+# duckmate, dialect-audit, parquet-unify, seedtypes, csv-rewind; grain-contract `check` runs its
+# SQL tests on DuckDB. fsspec: DuckDB's Python client needs it to read the in-memory file-like CSV
+# batches seedtypes hands it. 1.4.3 is the oldest release csv-rewind supports.
+duckdb = ["duckdb>=1.4.3,<2", "fsspec>=2025.10.0"]
 # parquet-unify (verify), seedtypes (compare and generated recipes)
 polars = ["polars>=1.35.2,<2"]
 # parquet-unify: footers, Arrow types and row-group rewrites
@@ -67,15 +68,38 @@ sqlmesh = [
     "ruamel.yaml>=0.18.6",
     "pydantic>=2.12,<3",
 ]
+# rebuild-check: sqlite-utils' CREATE TABLE parser (including private helpers for foreign-key
+# timing, so stay on the tested 4.2 line) and sqlparse tokens for definition comparison.
+sqlite = ["sqlite-utils>=4.2.1,<4.3", "sqlparse>=0.5.3,<0.7"]
+# join-witness: TableProof's audit, config loader and its `tableproof.audit.read_table` module
+# helper (not a public export, so stay within 0.1.x). Pure Python, no dependencies.
+tableproof = ["tableproof>=0.1.1,<0.2"]
+# grain-contract: streaming dbt manifest reader (from-dbt); SQL compilation uses the sqlglot extra.
+ijson = ["ijson>=3.4,<4"]
+# key-audit: ftfy's character-width fixer behind the explicit `width` rule (its version is part of
+# every review's engine identity).
+ftfy = ["ftfy>=6.3.1,<7"]
+# failurepack: Pandera validation (pandas, YAML schema IO), dfshrink's row reducer (brings Polars,
+# also imported directly) and packaging to pin the replay environment. dfshrink needs Python 3.12+,
+# so this extra does too. Heavy: kept out of `all`.
+pandera = [
+    "pandera[pandas,io]>=0.36,<0.37",
+    "pandas>=3.1,<3.2",
+    "dfshrink>=0.1.2,<0.2",
+    "polars>=1.35.2,<2",
+    "packaging>=24,<27",
+]
 # polars-vet as a flake8 plugin (the `PLV` entry point below); not needed for the CLI.
 flake8 = ["flake8>=7.3,<8"]
-all = ["datawrench[sqlglot,duckdb,polars,parquet,sqlfluff,singer]"]
+all = ["datawrench[sqlglot,duckdb,polars,parquet,sqlfluff,singer,sqlite,tableproof,ijson,ftfy]"]
 # Everything the default test suite imports: pytest, every extra except sqlmesh, flake8 for the
 # polars-vet plugin tests, pandas for the PLV007 benchmark replay and rfc3986-validator for the
 # dialect-audit SARIF `uri` format checks. The sqlmesh-manifest tests skip without sqlmesh;
-# run them with `uv run --extra test --extra sqlmesh pytest tests/sqlmesh_manifest`.
+# run them with `uv run --extra test --extra sqlmesh pytest tests/sqlmesh_manifest`. The pandera
+# extra (failurepack) installs only on Python 3.12+; its tests skip on 3.11.
 test = [
     "datawrench[all,flake8]",
+    "datawrench[pandera]; python_version >= '3.12'",
     "pytest>=8.4",
     "pandas>=2.3",
     "rfc3986-validator>=0.1.1",
@@ -93,6 +117,11 @@ datawrench = "datawrench.cli:main"
 [project.entry-points."flake8.extension"]
 # `datawrench polars-vet` rules, also available as a flake8 plugin (select PLV).
 PLV = "datawrench.polars_vet.plugin:PolarsVetChecker"
+
+[project.entry-points.sqlite_utils]
+# `datawrench rebuild-check`, also available as the `sqlite-utils rebuild-check` plugin command.
+# Only sqlite-utils loads this entry point; it needs the `sqlite` extra in that environment.
+rebuild_check = "datawrench.rebuild_check.plugin"
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
@@ -126,7 +155,8 @@ replacement = '](https://github.com/tianhaogutum/datawrench#\1)'
 [tool.hatch.build.targets.wheel]
 # Hatch ships every non-ignored file under src/datawrench/, including the package data
 # sqlmesh_manifest/*.json (the vendored dbt manifest v12 schema and the diff / validation-result
-# schemas that `datawrench sqlmesh-manifest` validates against).
+# schemas that `datawrench sqlmesh-manifest` validates against), join_witness/data/ (demo inputs and
+# the report schema) and failurepack/replay_template.py.txt.
 packages = ["src/datawrench"]
 
 [tool.hatch.build.targets.sdist]

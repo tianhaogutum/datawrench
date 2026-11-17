@@ -64,8 +64,9 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog=PROG, formatter_class=argparse.RawDescriptionHelpFormatter, epilog=EPILOG,
         description="Find dbt projects and manifests, SQL, Polars scripts, CSV seeds, Parquet folders, DuckDB "
-                    "migrations and Singer output under PATH and report breaking contract changes, lossy seed "
-                    "types, Parquet schema drift, slow Polars patterns, untranslatable SQL and broken tap output.")
+                    "migrations, join and grain contracts and Singer output under PATH and report breaking contract "
+                    "changes, lossy seed types, Parquet schema drift, slow Polars patterns, untranslatable SQL, "
+                    "fan-out joins, grain contracts that no longer compile and broken tap output.")
     p.add_argument("paths", nargs="*", metavar="PATH", help="folders or files to scan (default: .)")
     p.add_argument("--format", choices=("text", "json", "sarif", "markdown"), default="text",
                    help="report format (default: text); markdown suits a PR comment or $GITHUB_STEP_SUMMARY, "

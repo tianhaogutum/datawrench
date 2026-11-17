@@ -51,3 +51,6 @@ target-output/
 .venv-target/
 examples/singer_replay/.meltano/
 examples/singer_replay/output/
+
+# csv-rewind example output
+examples/csv_rewind/output/

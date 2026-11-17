@@ -7,7 +7,7 @@
 
 <p align="center">
   <strong>Catch what will break your data pipeline before the warehouse does.</strong><br>
-  One offline CLI that reads your dbt project, SQL, seeds, Parquet, Polars code and Singer output, and tells you what is about to go wrong.
+  One offline CLI that reads your dbt project, SQL, joins, seeds, Parquet, Polars code and Singer output, and tells you what is about to go wrong.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <strong>Point it at your repo. Breaking dbt contract changes, seeds that lose leading zeros, drifting Parquet schemas, slow Polars code, untranslatable SQL and broken tap output: ten tools, one read-only report.</strong>
+  <strong>Point it at your repo. Breaking dbt contract changes, joins that multiply rows, seeds that lose leading zeros, drifting Parquet schemas, slow Polars code, untranslatable SQL and broken tap output: sixteen tools in one install, one read-only report.</strong>
 </p>
 
 ```sh
@@ -43,7 +43,7 @@ uvx 'datawrench[all]' check . --format markdown >> "$GITHUB_STEP_SUMMARY"
 uvx 'datawrench[all]' check . --format sarif > datawrench.sarif   # SARIF 2.1.0 for code scanning
 ```
 
-No warehouse, no credentials, no dbt run, no config. `check` recognises inputs by their content (a `dbt_project.yml`, a `manifest.json`, SQL, Python that imports Polars, CSV, Parquet, dbmate migrations, Singer JSONL and catalogs), so you can point it at the whole repository.
+No warehouse, no credentials, no dbt run, no config. `check` recognises inputs by their content (a `dbt_project.yml`, a `manifest.json`, SQL, Python that imports Polars, CSV, Parquet, dbmate migrations, TableProof join contracts, grain contracts, Singer JSONL and catalogs), so you can point it at the whole repository.
 
 > **Not on PyPI yet.** Until the first release, install from Git:
 > `pipx install 'datawrench[all] @ git+https://github.com/tianhaogutum/datawrench'` or
@@ -66,6 +66,8 @@ uv run --project ../.. --extra all datawrench check --base-manifest prod/manifes
 | A tap that emits a record without its key | The loader rejects or duplicates it | `error tapcheck/TC010 stream orders: key property missing or null at id` |
 | `CREATE TEMP TABLE` in a migration | `duckmate up` stops at that migration | `error duckmate/unsupported-statement` |
 | `with_columns` inside a `for` loop | One query plan per iteration | `warn polars-vet/PLV004 ... line 9` |
+| A customer export where one `customer_id` appears twice | Every order joined to it is counted twice in revenue | `error join-witness/TP_RELATIONSHIP_VIOLATION` |
+| A new `LEFT JOIN` in a model with a grain contract | Nobody declared whether it may fan out | `error grain-contract/invalid-contract` |
 | A Parquet folder where `id` is `int32` in old files | A glob read fails or casts | `warn parquet-unify/widenable` (or `error type-conflict`) |
 
 ## What `check` runs
@@ -78,6 +80,8 @@ Each check calls the read-only Python API of one datawrench command; nothing is 
 | | `sqlmesh-manifest` | SQLMesh projects: whether the exported dbt manifest validates, or the command to export one |
 | SQL quality | `lint-cache` | SQLFluff violations under your own SQLFluff config (no cache written, dbt templater never run) |
 | | `dialect-audit` | With `--dialect FROM:TO`: statements that will not parse or translate, unknown functions, unstable output |
+| Keys & joins | `join-witness` | TableProof join contracts: relationship violations, many-to-many expansion, unmatched keys, rows above the contract caps |
+| | `grain-contract` | Grain contracts next to a SELECT that no longer compile: undeclared joins, bad keys or grain |
 | DataFrames & files | `polars-vet` | Eager reads turned lazy, Python lambdas, row loops, `with_columns`/`concat` in loops, `sort().head()` |
 | | `parquet-unify` | Schema drift across the files of a Parquet folder: type conflicts, widenable types, missing columns |
 | | `seedtypes` | Seed columns whose default DuckDB or Polars read changes the text and that are not pinned |
@@ -108,10 +112,16 @@ The first run writes a Markdown report to the job summary (also fine as a PR com
 | | `sqlmesh-manifest` | Export a SQLMesh project as a dbt manifest v12; validate and diff it | `[sqlmesh]` |
 | SQL quality | `lint-cache` | Content-addressed cache for SQLFluff: re-lint only what changed | `[sqlfluff]` |
 | | `dialect-audit` | Per-statement dialect migration report, with DuckDB binding against empty tables | `[sqlglot,duckdb]` |
+| | `rebuild-check` | Rehearse SQLite migrations on a disposable backup; fail when a table rebuild dropped a trigger, index, view, foreign key or constraint (also a sqlite-utils plugin) | `[sqlite]` |
+| Keys & joins | `join-witness` | Rank the source records that multiply a join and trace how each one inflates a sum; emit DuckDB assertions | `[tableproof]` |
+| | `grain-contract` | Compile a SELECT plus primary keys and per-join grain intentions into zero-row SQL tests; dbt singular tests from the compiled manifest | `[sqlglot,ijson]` (+`[duckdb]` to run) |
+| | `key-audit` | Preview Unicode cleanup (NFC, width, strip, casefold…) on CSV join keys: separate existing duplicates from new collisions, then export only confirmed rules | `[ftfy]` |
 | DataFrames & files | `polars-vet` | Static Polars performance checks, `--fix` for safe rewrites, also a flake8 plugin | |
 | | `parquet-unify` | Plan a lossless common schema; generate DuckDB and Polars readers; rewrite and verify | `[parquet,duckdb,polars]` |
 | | `seedtypes` | Infer CSV types that keep every value; emit dbt `column_types`, DuckDB or Polars readers | `[duckdb,polars,sqlglot]` |
 | | `duckmate` | dbmate-format DuckDB migrations with schema snapshots and drift verification | `[duckdb]` |
+| | `csv-rewind` | Show which CSV cells a proposed DuckDB schema changes; recommend safe types and verified read SQL | `[duckdb]` |
+| | `failurepack` | Shrink a CSV to a replayable bundle that still triggers one chosen Pandera failure | `[pandera]` (Python 3.12+) |
 | Singer pipelines | `tapcheck` | Streaming contract and quality checks for Singer and Airbyte JSONL; convert between them | `[singer]` |
 | | `singer-replay` | Record a scrubbed tap cassette once, replay it as a credential-free tap | |
 
@@ -120,20 +130,23 @@ datawrench contract-diff --base prod/manifest.json --head target/manifest.json -
 datawrench seedtypes emit seeds/zip_codes.csv --target dbt --adapter snowflake
 datawrench parquet-unify plan lake/orders --explain
 datawrench tapcheck validate singer/orders.jsonl --strict --check-duplicates
+datawrench join-witness --config tableproof.toml --audit orders-to-customers --left-measure amount
+datawrench grain-contract compile models/orders.sql orders.contract.json --out tests/grain_orders
+datawrench rebuild-check app.db migrations/0042_rebuild.sql
 ```
 
-The core install needs only PyYAML. Extras pull in the heavy dependencies: `[sqlglot]`, `[duckdb]`, `[polars]`, `[parquet]` (pyarrow), `[sqlfluff]`, `[singer]` (jsonschema), or `[all]` for all of them. `[sqlmesh]` is separate because it pins SQLMesh's own sqlglot version: `pipx install 'datawrench[all,sqlmesh]'`. `datawrench <command> --help` lists every option.
+The core install needs only PyYAML. Extras pull in the heavy dependencies: `[sqlglot]`, `[duckdb]`, `[polars]`, `[parquet]` (pyarrow), `[sqlfluff]`, `[singer]` (jsonschema), `[sqlite]` (sqlite-utils, sqlparse), `[tableproof]`, `[ijson]`, `[ftfy]`, or `[all]` for all of them. Two extras are separate: `[sqlmesh]` pins SQLMesh's own sqlglot version (`pipx install 'datawrench[all,sqlmesh]'`), and `[pandera]` (Pandera, pandas, dfshrink) is heavy and needs Python 3.12+ (`pipx install 'datawrench[pandera]'`). `datawrench <command> --help` lists every option.
 
 ## Trust and limits
 
 - **Offline, no telemetry.** datawrench opens no network connections and needs no warehouse credentials.
 - **Read-only by default.** `check` and the analysis subcommands never modify inputs; `check` does not even create a lint cache. Commands that write need an explicit output path.
-- **Nothing is executed.** No dbt run, no model, no tap, no migration. SQL is parsed (and, on request, bound with `EXPLAIN` against empty in-memory tables), never run. The dbt templater and SQLMesh Python models run only when you pass the explicit trust flag to their own command.
-- **No data in reports.** Findings name files, columns, streams and line numbers, not record values or CSV fields.
+- **Nothing is executed by `check`.** No dbt run, no model, no tap, no migration. SQL is parsed (and, on request, bound with `EXPLAIN` against empty in-memory tables), never run. The dbt templater and SQLMesh Python models run only when you pass the explicit trust flag to their own command. The commands that do execute say so: `rebuild-check` applies migrations to a temporary backup copy only, `grain-contract check` runs its generated read-only queries against the DuckDB file you name, and `failurepack` runs your Pandera schema on candidate CSVs in a subprocess.
+- **No data in `check` reports.** Findings name files, columns, streams, joins and line numbers, not record values, keys or CSV fields. The commands you run to investigate (`join-witness`, `key-audit`, `csv-rewind`) show the keys or cells involved, locally, because that is their job.
 - **Strict inputs.** Each tool reads a documented format and says why when it refuses an input. It does not guess.
 - **Files, not your warehouse.** A contract diff compares two manifests; seed checks compare CSV text with what default readers produce locally; Parquet checks read footers only.
 
-datawrench is independent and not affiliated with dbt Labs, Tobiko (SQLMesh), SQLFluff, SQLGlot, DuckDB, Polars, Apache Arrow, Singer, Meltano or Airbyte.
+datawrench is independent and not affiliated with dbt Labs, Tobiko (SQLMesh), SQLFluff, SQLGlot, DuckDB, Polars, Apache Arrow, Singer, Meltano, Airbyte, TableProof, Pandera, sqlite-utils or ftfy.
 
 ---
 

@@ -5,7 +5,7 @@ cross-input checkers take ``(sources, options)``. Expected input problems (the
 tool's own error type) become findings here; anything else propagates and is
 turned into an ``internal`` finding by the registry. Tool packages, and the
 heavy optional dependencies behind them (sqlglot, DuckDB, Polars, pyarrow,
-SQLMesh, SQLFluff, jsonschema), are imported inside each checker, after
+SQLMesh, SQLFluff, jsonschema, TableProof), are imported inside each checker, after
 ``need()`` has confirmed they are installed; a missing one becomes a single
 info finding with the install command.
 """
@@ -669,6 +669,102 @@ def singer_replay(source: Source, options) -> Iterator[Finding]:
                   f"{_plural(len(summary['streams']), 'stream')}: checksums, catalog and counts match the manifest"
                   + ("; recorded with --limit (a prefix of the tap output)" if summary["truncated"] else ""),
                   source.display)
+
+
+# --------------------------------------------------------------------------- join-witness
+
+TABLEPROOF_SEVERITY = {"error": ERROR, "warn": WARNING}
+
+
+def join_witness(source: Source, options) -> Iterator[Finding]:
+    need("tableproof")
+    from tableproof import TableProofError
+    from tableproof.config import load_config
+
+    from datawrench.join_witness.engine import analyze
+
+    try:
+        specs, _ = load_config(source.path)
+    except (TableProofError, TypeError, ValueError) as exc:
+        yield Finding("join-witness", "invalid-contract", WARNING,
+                      f"TableProof contract not usable: {_clean(exc, source)}", source.display,
+                      hint="TableProof v1 TOML: version = 1 and [[joins]] with left, right, left_keys, right_keys, "
+                           "relationship")
+        return
+    for spec in specs:
+        details = f"datawrench join-witness --config {source.display} --audit {spec.name}"
+        try:
+            # Redacted and without samples: counts and finding codes only, never key or record values.
+            report = analyze(spec, top=0, sample_rows=0, sample_bytes=0, redact=True)
+        except (TableProofError, OSError, UnicodeError) as exc:
+            folder = os.path.dirname(source.display)
+            tables = [(Path(path), os.path.normpath(os.path.join(folder, os.path.relpath(path, source.path.resolve().parent))))
+                      for path in (spec.left, spec.right)]
+            yield Finding("join-witness", "not-checked", WARNING, f"join not checked: {_clean(exc, source, *tables)}",
+                          source.display, subject=spec.name,
+                          hint="the contract names CSV/TSV files relative to its own folder")
+            continue
+        for item in report["upstream_audit"]["findings"]:
+            yield Finding("join-witness", str(item["code"]), TABLEPROOF_SEVERITY.get(item["severity"], INFO),
+                          _short(item["message"]), source.display, subject=spec.name,
+                          hint=details + " lists the key groups that multiply it")
+        summary = report["summary"]
+        yield Finding("join-witness", "summary", INFO,
+                      f"{report['join_type']} join, expected {report['expected_relationship']}: "
+                      f"{summary['predicted_join_rows']:,} predicted rows, "
+                      f"{summary['contract_excess_matched_rows']:,} above the contract caps in "
+                      f"{_plural(summary['contract_violating_matched_key_groups'], 'key group')}",
+                      source.display, subject=spec.name,
+                      hint=details + " --left-measure COLUMN shows how a sum changes")
+
+
+# --------------------------------------------------------------------------- grain-contract
+
+CONTRACT_SUFFIX = ".contract.json"
+
+
+def _contract_sql(source: Source) -> Path | None:
+    """The SELECT a contract describes: NAME.sql next to NAME.contract.json (or NAME.json)."""
+    name = source.path.name
+    stem = name[:-len(CONTRACT_SUFFIX)] if name.lower().endswith(CONTRACT_SUFFIX) else source.path.stem
+    sql = source.path.with_name(stem + ".sql")
+    return sql if sql.is_file() and not sql.is_symlink() else None
+
+
+def grain_contract(source: Source, options) -> Iterator[Finding]:
+    keys = source.data["primary_keys"]
+    dbt_keys = [key for key in keys if isinstance(key, str) and key.startswith(("ref:", "source:"))]
+    if dbt_keys:
+        yield Finding("grain-contract", "dbt-contract", INFO,
+                      f"dbt grain contract ({_plural(len(dbt_keys), 'ref/source key')}); compiled only against a "
+                      "dbt manifest", source.display,
+                      hint="after dbt compile: datawrench grain-contract from-dbt --manifest target/manifest.json "
+                           f"--model MODEL --contract {source.display} --out DIR --check")
+        return
+    sql_path = _contract_sql(source)
+    if sql_path is None:
+        yield Finding("grain-contract", "no-sql", INFO,
+                      "grain contract without a paired SQL file (NAME.sql next to NAME.contract.json); not compiled",
+                      source.display, hint=f"datawrench grain-contract compile MODEL.sql {source.display}")
+        return
+    need("sqlglot")
+    from datawrench.grain_contract.compiler import ContractError, compile_contract
+
+    sql_display = os.path.normpath(os.path.join(os.path.dirname(source.display), sql_path.name))
+    try:
+        bundle = compile_contract(sql_path.read_text(encoding="utf-8"), source.data)
+    except (ContractError, UnicodeError) as exc:
+        yield Finding("grain-contract", "invalid-contract", ERROR,
+                      f"does not compile against {sql_path.name}: {_clean(exc, source, (sql_path, sql_display))}",
+                      source.display,
+                      hint=f"datawrench grain-contract compile {sql_display} {source.display} shows the full error; "
+                           "every join in the SQL needs a matching declaration")
+        return
+    yield Finding("grain-contract", "compiled", INFO,
+                  f"{_plural(len(bundle.checks), 'zero-row check')} for {_plural(len(bundle.joins), 'join')} "
+                  f"({bundle.dialect}); nothing executed", source.display,
+                  hint=f"datawrench grain-contract check {sql_display} {source.display} --database PATH runs them "
+                       "on DuckDB (or compile --out DIR for dbt tests)")
 
 
 def missing_dependency(check: str, module: str, extra: str | None, count: int) -> Finding:

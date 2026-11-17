@@ -1,10 +1,11 @@
 """``datawrench check``: one read-only pass over a data repository.
 
 ``check`` finds dbt projects and manifests, SQL files, Python files that use
-Polars, CSV seeds, Parquet folders, dbmate-style DuckDB migrations, Singer /
-Airbyte output and catalogs and singer-replay cassettes by their content, then
-runs the read-only analyses of the other datawrench tools on them
-(contract-diff, sqlmesh-manifest, lint-cache, dialect-audit, polars-vet,
+Polars, CSV seeds, Parquet folders, dbmate-style DuckDB migrations, TableProof
+join contracts, grain contracts, Singer / Airbyte output and catalogs and
+singer-replay cassettes by their content, then runs the read-only analyses of
+the other datawrench tools on them (contract-diff, sqlmesh-manifest,
+lint-cache, dialect-audit, join-witness, grain-contract, polars-vet,
 parquet-unify, seedtypes, duckmate, tapcheck, singer-replay). It never writes a
 file, never runs a model, a tap or a query, and never opens a network
 connection.

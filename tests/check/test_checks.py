@@ -274,7 +274,87 @@ def test_dbt_manifests_are_not_validated_by_sqlmesh_manifest(workdir, check_json
     assert document["findings"] == []
 
 
-@pytest.mark.parametrize("name", ["contract-diff", "lint-cache", "dialect-audit"])
+# --------------------------------------------------------------------------- join-witness
+
+TABLEPROOF = """version = 1
+
+[[joins]]
+name = "orders-to-customers"
+left = "orders.csv"
+right = "customers.csv"
+left_keys = ["customer_id"]
+right_keys = ["customer_id"]
+relationship = "many-to-one"
+join_type = "left"
+"""
+
+
+def test_join_witness_reports_a_fanout_join_without_values(workdir, check_json):
+    needs("tableproof")
+    write(workdir / "contracts/joins.toml", TABLEPROOF)
+    write(workdir / "contracts/orders.csv", "order_id,customer_id,amount\nO1,C001,12.50\nO2,C001,7.50\n"
+                                            "O3,C002,10.00\nO4,C003,5.00\n")
+    write(workdir / "contracts/customers.csv", "customer_id,name\nC001,Aster\nC001,Aster old\nC002,Birch\n")
+    before = snapshot(workdir)
+    code, document = check_json("--only", "join-witness")
+    ids = rule_ids(document, "contracts/joins.toml")
+    assert "join-witness/TP_RELATIONSHIP_VIOLATION" in ids and "join-witness/summary" in ids
+    (summary,) = findings(document, "join-witness/summary")
+    assert summary["subject"] == "orders-to-customers"
+    assert "6 predicted rows, 2 above the contract caps in 1 key group" in summary["message"]
+    assert code == 1
+    text = json.dumps(document)
+    assert "C001" not in text and "Aster" not in text
+    assert snapshot(workdir) == before
+
+
+def test_join_witness_ignores_other_toml_and_reports_missing_tables(workdir, check_json):
+    needs("tableproof")
+    write(workdir / "settings.toml", "[tool]\nname = 'x'\n")
+    write(workdir / "joins.toml", TABLEPROOF)
+    _, document = check_json("--only", "join-witness")
+    assert {f["file"] for f in document["findings"]} == {"joins.toml"}
+    assert {f["rule"] for f in document["findings"]} <= {"invalid-contract", "not-checked"}
+
+
+# --------------------------------------------------------------------------- grain-contract
+
+GRAIN = {"version": 1, "dialect": "duckdb", "primary_keys": {"orders": ["id"], "customers": ["id"]},
+         "scopes": {"$root": {"grain": ["o.id"], "joins": {"c": {"cardinality": "m:1", "preserve": "left"}}}},
+         "output_grain": ["order_id"]}
+GRAIN_SQL = ("select o.id as order_id, c.name from orders as o "
+             "left join customers as c on o.customer_id = c.id\n")
+
+
+def test_grain_contract_compiles_against_its_sql(workdir, check_json):
+    needs("sqlglot")
+    write(workdir / "models/orders.sql", GRAIN_SQL)
+    write_json(workdir / "models/orders.contract.json", GRAIN)
+    code, document = check_json("--only", "grain-contract")
+    (compiled,) = document["findings"]
+    assert compiled["ruleId"] == "grain-contract/compiled" and compiled["file"] == "models/orders.contract.json"
+    assert "1 join" in compiled["message"] and "nothing executed" in compiled["message"]
+    assert code == 0
+
+
+def test_grain_contract_undeclared_join_is_an_error(workdir, check_json):
+    needs("sqlglot")
+    write(workdir / "orders.sql", GRAIN_SQL)
+    write_json(workdir / "orders.contract.json", {**GRAIN, "scopes": {"$root": {"grain": ["o.id"], "joins": {}}}})
+    code, document = check_json("--only", "grain-contract")
+    assert rule_ids(document) == ["grain-contract/invalid-contract"] and code == 1
+
+
+def test_grain_contract_dbt_and_unpaired_contracts_are_notices(workdir, check_json):
+    write_json(workdir / "dbt.contract.json", {**GRAIN, "primary_keys": {"ref:stg_orders": ["id"]}})
+    write_json(workdir / "lonely.contract.json", GRAIN)
+    write_json(workdir / "other.json", {"version": 1, "name": "not a contract"})
+    _, document = check_json("--only", "grain-contract")
+    assert [(f["ruleId"], f["file"]) for f in document["findings"]] == [
+        ("grain-contract/dbt-contract", "dbt.contract.json"), ("grain-contract/no-sql", "lonely.contract.json")]
+
+
+@pytest.mark.parametrize("name", ["contract-diff", "lint-cache", "dialect-audit", "join-witness", "grain-contract"])
 def test_checks_without_inputs_stay_silent(workdir, check_json, name):
     write(workdir / "README.md", "# nothing here\n")
     _, document = check_json("--only", name)

@@ -12,6 +12,11 @@ merged here; see THIRD_PARTY.md for per-command provenance and dependency notice
 - lint-cache (formerly sqlfluff-cache), dialect-audit, polars-vet, parquet-unify,
   seedtypes and duckmate were released under the MIT License. Their original MIT
   permission notice is reproduced in licenses/MIT-original-tools.txt.
+- rebuild-check (formerly sqlite-rebuild-check / sqlite-utils-rebuild-check),
+  join-witness, grain-contract (formerly sql-grain-contract), key-audit (formerly
+  unicode-key-audit / keyaudit), csv-rewind and failurepack were released under the
+  MIT License, each with its own copyright line. Their original notices are kept
+  unchanged in licenses/<command>/LICENSE.
 
 Merged from the original NOTICE files
 -------------------------------------

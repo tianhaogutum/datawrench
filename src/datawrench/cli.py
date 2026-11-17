@@ -33,7 +33,7 @@ class Command:
     extra: str | None = None
 
 
-GROUPS = ("Check", "dbt & SQLMesh", "SQL quality", "DataFrames & files", "Singer pipelines")
+GROUPS = ("Check", "dbt & SQLMesh", "SQL quality", "Keys & joins", "DataFrames & files", "Singer pipelines")
 
 COMMANDS: tuple[Command, ...] = (
     Command("check", "datawrench.check.cli",
@@ -53,6 +53,18 @@ COMMANDS: tuple[Command, ...] = (
     Command("dialect-audit", "datawrench.dialect_audit.cli",
             "Per-statement SQL dialect migration report with offline DuckDB binding checks",
             "SQL quality", requires=("sqlglot", "duckdb"), extra="sqlglot,duckdb"),
+    Command("rebuild-check", "datawrench.rebuild_check.cli",
+            "Rehearse SQLite migrations on a backup; flag triggers, indexes and keys a rebuild dropped",
+            "SQL quality", requires=("sqlite_utils", "sqlparse"), extra="sqlite"),
+    Command("join-witness", "datawrench.join_witness.cli",
+            "Find the source records that multiply a join and how they change a sum (TableProof)",
+            "Keys & joins", requires=("tableproof",), extra="tableproof"),
+    Command("grain-contract", "datawrench.grain_contract.cli",
+            "Compile SELECT SQL, primary keys and join-grain declarations into zero-row SQL tests",
+            "Keys & joins", requires=("sqlglot", "ijson"), extra="sqlglot,ijson"),
+    Command("key-audit", "datawrench.key_audit.cli",
+            "Preview Unicode key cleanup: find CSV keys that would newly collide, export confirmed rules",
+            "Keys & joins", requires=("ftfy",), extra="ftfy"),
     Command("polars-vet", "datawrench.polars_vet.cli",
             "Static, alias-aware performance checks for Polars code (also a flake8 plugin)",
             "DataFrames & files"),
@@ -67,6 +79,13 @@ COMMANDS: tuple[Command, ...] = (
     Command("duckmate", "datawrench.duckmate.cli",
             "dbmate-format DuckDB migrations with schema snapshots and drift verification",
             "DataFrames & files", requires=("duckdb",), extra="duckdb"),
+    Command("csv-rewind", "datawrench.csv_rewind.cli",
+            "Show which CSV cells a proposed DuckDB schema would change; freeze a verified reader",
+            "DataFrames & files", requires=("duckdb",), extra="duckdb"),
+    Command("failurepack", "datawrench.failurepack.cli",
+            "Shrink a CSV to a replayable bundle that still triggers one chosen Pandera failure",
+            "DataFrames & files", requires=("pandera", "pandas", "dfshrink", "polars", "packaging"),
+            extra="pandera"),
     Command("tapcheck", "datawrench.tapcheck.cli",
             "Streaming contract and data-quality checks for Singer and Airbyte JSONL",
             "Singer pipelines", requires=("jsonschema", "referencing", "rfc3339_validator"),
@@ -81,6 +100,9 @@ BY_NAME = {command.name: command for command in COMMANDS}
 LEGACY = {
     "dbt-contract-diff": "contract-diff", "sqlmesh-dbt-manifest": "sqlmesh-manifest",
     "sqlfluff-cache": "lint-cache", "tap-replay": "singer-replay tap",
+    "sqlite-rebuild-check": "rebuild-check", "sqlite-utils-rebuild-check": "rebuild-check",
+    "keyaudit": "key-audit", "unicode-key-audit": "key-audit", "sql-grain-contract": "grain-contract",
+    "tableproof-join-witness": "join-witness",
 }
 
 
@@ -110,7 +132,7 @@ def _missing_requirement(command: Command, exc: ModuleNotFoundError) -> str | No
 def overview() -> str:
     width = max(len(command.name) for command in COMMANDS) + 2
     lines = [
-        f"{PROG} {__version__} - offline checks for dbt, SQL, CSV/Parquet and Singer pipelines",
+        f"{PROG} {__version__} - offline checks for dbt, SQL, joins, CSV/Parquet and Singer pipelines",
         "",
         f"usage: {PROG} <command> [args...]",
         f"       {PROG} <command> --help",
@@ -131,7 +153,9 @@ def overview() -> str:
         f"Optional extras: {PROG}[sqlglot] (contract-diff), {PROG}[sqlmesh] (sqlmesh-manifest),",
         f"{PROG}[sqlfluff] (lint-cache), {PROG}[sqlglot,duckdb] (dialect-audit),",
         f"{PROG}[parquet,duckdb,polars] (parquet-unify), {PROG}[duckdb,polars,sqlglot] (seedtypes),",
-        f"{PROG}[duckdb] (duckmate), {PROG}[singer] (tapcheck), or {PROG}[all] (all but sqlmesh).",
+        f"{PROG}[duckdb] (duckmate, csv-rewind), {PROG}[singer] (tapcheck), {PROG}[sqlite] (rebuild-check),",
+        f"{PROG}[tableproof] (join-witness), {PROG}[sqlglot,ijson] (grain-contract), {PROG}[ftfy] (key-audit),",
+        f"{PROG}[pandera] (failurepack, Python 3.12+), or {PROG}[all] (all but sqlmesh and pandera).",
         "",
         f"Docs and issues: {REPO_URL}",
     ]

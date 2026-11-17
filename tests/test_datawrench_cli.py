@@ -12,8 +12,9 @@ from datawrench import cli
 ROOT = Path(__file__).resolve().parents[1]
 
 # Commands whose Python subpackage ships in this repository (`check` is the hero command).
-TOOLS = ["check", "contract-diff", "sqlmesh-manifest", "lint-cache", "dialect-audit", "polars-vet",
-         "parquet-unify", "seedtypes", "duckmate", "tapcheck", "singer-replay"]
+TOOLS = ["check", "contract-diff", "sqlmesh-manifest", "lint-cache", "dialect-audit", "rebuild-check",
+         "join-witness", "grain-contract", "key-audit", "polars-vet", "parquet-unify", "seedtypes",
+         "duckmate", "csv-rewind", "failurepack", "tapcheck", "singer-replay"]
 # Every merged tool is built on argparse: `--help` prints a "usage: datawrench <tool>" line.
 ARGPARSE_TOOLS = [tool for tool in TOOLS if tool != "check"]
 # `check` keeps its own flags; every merged tool prints the bare package version.
@@ -29,6 +30,9 @@ SUBCOMMANDS = {
     "tapcheck": ["validate", "quality", "convert"],
     # `tap` is hand-routed (formerly the separate `tap-replay` console script).
     "singer-replay": ["record", "trim", "verify", "scrub", "tap"],
+    "grain-contract": ["compile", "check", "from-dbt"],
+    "key-audit": ["rules", "audit", "clean", "show", "export-map"],
+    "failurepack": ["list", "reduce", "replay", "resume"],
 }
 PACKAGES = {
     "contract-diff": "datawrench.contract_diff", "sqlmesh-manifest": "datawrench.sqlmesh_manifest",
@@ -36,19 +40,28 @@ PACKAGES = {
     "polars-vet": "datawrench.polars_vet", "parquet-unify": "datawrench.parquet_unify",
     "seedtypes": "datawrench.seedtypes", "duckmate": "datawrench.duckmate",
     "tapcheck": "datawrench.tapcheck", "singer-replay": "datawrench.singer_replay",
+    "rebuild-check": "datawrench.rebuild_check", "join-witness": "datawrench.join_witness",
+    "grain-contract": "datawrench.grain_contract", "key-audit": "datawrench.key_audit",
+    "csv-rewind": "datawrench.csv_rewind", "failurepack": "datawrench.failurepack",
 }
 EXTRAS = {
     "contract-diff": "sqlglot", "sqlmesh-manifest": "sqlmesh", "lint-cache": "sqlfluff",
     "dialect-audit": "sqlglot,duckdb", "parquet-unify": "parquet,duckdb,polars",
     "seedtypes": "duckdb,polars,sqlglot", "duckmate": "duckdb", "tapcheck": "singer",
+    "rebuild-check": "sqlite", "join-witness": "tableproof", "grain-contract": "sqlglot,ijson",
+    "key-audit": "ftfy", "csv-rewind": "duckdb", "failurepack": "pandera",
 }
 LEGACY_NAMES = [
     ("dbt-contract-diff", "contract-diff"), ("sqlmesh-dbt-manifest", "sqlmesh-manifest"),
     ("sqlfluff-cache", "lint-cache"), ("tap-replay", "singer-replay tap"),
+    ("sqlite-rebuild-check", "rebuild-check"), ("sqlite-utils-rebuild-check", "rebuild-check"),
+    ("keyaudit", "key-audit"), ("unicode-key-audit", "key-audit"),
+    ("sql-grain-contract", "grain-contract"), ("tableproof-join-witness", "join-witness"),
 ]
-# sqlmesh-manifest's extra is not part of `test` (CI runs it in a separate job); skip the
-# commands whose optional dependencies are absent instead of failing on the install hint.
-OPTIONAL = {"sqlmesh-manifest": ("sqlmesh", "dbt_artifacts_parser")}
+# sqlmesh-manifest's extra is not part of `test` (CI runs it in a separate job) and failurepack's
+# `pandera` extra installs only on Python 3.12+; skip the commands whose optional dependencies are
+# absent instead of failing on the install hint.
+OPTIONAL = {"sqlmesh-manifest": ("sqlmesh", "dbt_artifacts_parser"), "failurepack": ("dfshrink", "pandera")}
 
 
 def _skip_without_extra(tool):
@@ -86,8 +99,10 @@ def test_command_table_shape():
     assert groups == {
         "Check": ["check"],
         "dbt & SQLMesh": ["contract-diff", "sqlmesh-manifest"],
-        "SQL quality": ["lint-cache", "dialect-audit"],
-        "DataFrames & files": ["polars-vet", "parquet-unify", "seedtypes", "duckmate"],
+        "SQL quality": ["lint-cache", "dialect-audit", "rebuild-check"],
+        "Keys & joins": ["join-witness", "grain-contract", "key-audit"],
+        "DataFrames & files": ["polars-vet", "parquet-unify", "seedtypes", "duckmate", "csv-rewind",
+                               "failurepack"],
         "Singer pipelines": ["tapcheck", "singer-replay"],
     }
     assert {c.name: c.module for c in cli.COMMANDS} == {
@@ -105,6 +120,12 @@ def test_extras_are_declared_in_pyproject():
     declared = {part for c in cli.COMMANDS if c.extra for part in c.extra.split(",")}
     for extra in declared | {"all", "test", "flake8"}:
         assert f"\n{extra} = [" in text, extra
+
+
+def test_sqlite_utils_plugin_entry_point_targets_shipped_module():
+    text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'rebuild_check = "datawrench.rebuild_check.plugin"' in text
+    assert importlib.util.find_spec("datawrench.rebuild_check.plugin") is not None
 
 
 def test_flake8_plugin_entry_point_targets_shipped_module():
@@ -180,7 +201,8 @@ def test_singer_replay_tap_version_is_package_version(capsys):
     assert code == 0 and out == f"{datawrench.__version__}\n"
 
 
-@pytest.mark.parametrize("tool", ["polars-vet", "singer-replay", "duckmate", "tapcheck", "seedtypes"])
+@pytest.mark.parametrize("tool", ["polars-vet", "singer-replay", "duckmate", "tapcheck", "seedtypes",
+                                  "join-witness", "grain-contract", "key-audit"])
 def test_tool_exit_codes_pass_through(tool):
     bad = run(tool, "no-such-subcommand")
     assert bad.returncode == 2 and f"usage: datawrench {tool}" in bad.stderr
@@ -268,6 +290,12 @@ _WITHOUT = ("import sys\nfor name in {blocked!r}: sys.modules[name] = None\n"
     ("seedtypes", ["duckdb"]),
     ("duckmate", ["duckdb"]),
     ("tapcheck", ["jsonschema"]),
+    ("rebuild-check", ["sqlite_utils", "sqlparse"]),
+    ("join-witness", ["tableproof"]),
+    ("grain-contract", ["sqlglot"]),
+    ("key-audit", ["ftfy"]),
+    ("csv-rewind", ["duckdb"]),
+    ("failurepack", ["pandera"]),
 ])
 def test_missing_extra_exits_2_with_one_line_hint(tool, blocked, tmp_path):
     result = subprocess.run([sys.executable, "-c", _WITHOUT.format(blocked=blocked, argv=[tool, "--help"])],
@@ -282,7 +310,8 @@ def test_missing_extra_exits_2_with_one_line_hint(tool, blocked, tmp_path):
 @pytest.mark.parametrize("tool", ["polars-vet", "singer-replay"])
 def test_standard_library_tools_need_no_extra(tool, tmp_path):
     blocked = ["sqlglot", "duckdb", "polars", "pyarrow", "sqlfluff", "jinja2", "jsonschema",
-               "sqlmesh", "flake8"]
+               "sqlmesh", "flake8", "sqlite_utils", "sqlparse", "tableproof", "ijson", "ftfy", "pandera",
+               "pandas", "dfshrink"]
     result = subprocess.run([sys.executable, "-c", _WITHOUT.format(blocked=blocked, argv=[tool, "--help"])],
                             cwd=tmp_path, capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stderr
